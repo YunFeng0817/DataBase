@@ -2,11 +2,12 @@ import java.sql.*;
 
 public class Main {
     public static void main(String[] args) {
-        String sql = "";
+        String sql = ""; // the final SQL sentence to be executed
         try {
             int choice;
             if (args.length >= 5) {
                 if (args[0].equals("company_query") && args[1].equals("-q") && args[3].equals("-p")) {
+                    // the parsing result of parameter <number>
                     choice = Integer.parseInt(args[2]);
                     switch (choice) {
                     case 1:
@@ -119,6 +120,7 @@ public class Main {
      * @throws SQLException parse result exception
      */
     static void printTable(ResultSet resultSet) throws SQLException {
+        // see if the query result is NULL, if so, print empty result to the console
         if (!resultSet.next()) {
             System.out.println("Empty result");
             return;
