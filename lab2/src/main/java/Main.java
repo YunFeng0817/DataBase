@@ -8,7 +8,7 @@ public class Main {
         final String DB_URL = "jdbc:mysql://localhost:3306/COMPANY";
         final String USER = "root";
         final String PASS = "123456";
-        Connection connect = null;
+        Connection connection = null;
         Statement statement = null;
         try {
             // register JDBC driver
@@ -16,9 +16,9 @@ public class Main {
 
             // establish connection with sql server
             System.out.println("Connecting to SQL...");
-            connect = DriverManager.getConnection(DB_URL, USER, PASS);
+            connection = DriverManager.getConnection(DB_URL, USER, PASS);
 
-            statement = connect.createStatement();
+            statement = connection.createStatement();
             String sql;
             sql = "SELECT * FROM EMPLOYEE";
             ResultSet resultSet = statement.executeQuery(sql);
@@ -26,7 +26,7 @@ public class Main {
             // close result set to release memory
             resultSet.close();
             statement.close();
-            connect.close();
+            connection.close();
         } catch (SQLException se) {
             se.printStackTrace();
         } catch (Exception e) {
@@ -38,8 +38,8 @@ public class Main {
             } catch (SQLException se2) {
             }
             try {
-                if (connect != null)
-                    connect.close();
+                if (connection != null)
+                    connection.close();
             } catch (SQLException se) {
                 se.printStackTrace();
             }
