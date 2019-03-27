@@ -1,2 +1,9 @@
 **/*.pdf
 .vscode
+.gradle
+**/bin
+.settings
+**/build
+**/*.project
+**/.classpath
+**/.project
