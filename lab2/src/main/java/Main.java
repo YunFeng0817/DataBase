@@ -11,13 +11,7 @@ public class Main {
                     choice = Integer.parseInt(args[2]);
                     switch (choice) {
                     case 1:
-                        String parameters = "";
-                        for (int i = 5; i <= args.length; i++) {
-                            parameters += "'" + args[i - 1] + "'";
-                            if (i != args.length)
-                                parameters += ",";
-                        }
-                        sql = "select ESSN from WORKS_ON where PNO in (" + parameters + ");";
+                        sql = "select ESSN from WORKS_ON where PNO = '" + args[4] + "';";
                         break;
                     case 2:
                         sql = "select ENAME from EMPLOYEE,PROJECT,WORKS_ON where EMPLOYEE.ESSN=WORKS_ON.ESSN and PROJECT.PNO=WORKS_ON.PNO and PNAME='"
