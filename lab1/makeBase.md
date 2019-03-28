@@ -99,7 +99,6 @@ where ESSN in(
 			  select count(distinct PNO)
 			  from PROJECT
 		  )
-
 	  );
 
 select DNAME
