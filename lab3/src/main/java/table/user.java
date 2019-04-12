@@ -38,13 +38,6 @@ public class user {
     }
 
     /**
-     * @param userID the userID to set
-     */
-    public void setUserID(int userID) {
-        this.userID = userID;
-    }
-
-    /**
      * @return the address
      */
     public String getAddress() {

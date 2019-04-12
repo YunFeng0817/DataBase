@@ -108,10 +108,13 @@ public class Main {
                 command = scanner.nextLine();
                 if (!command.equals("exit")) {
                     add_user addUser = new add_user();
+                    update_user update_user = new update_user();
                     commandTypes = new ArrayList();
-                    commandTypes.add((add_user) addUser);
+                    commandTypes.add(addUser);
+                    commandTypes.add(update_user);
                     jCommander = JCommander.newBuilder().addCommand("add_user", addUser).build();
                     try {
+                        command += "-id " + user_id;
                         jCommander.parse(command.split("\\s"));
                         Class commandType = Class.forName("command." + jCommander.getParsedCommand());
                         Method declaredMethod = commandType.getDeclaredMethod("run", Statement.class);
