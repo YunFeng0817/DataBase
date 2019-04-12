@@ -33,6 +33,7 @@ public class Main {
         JCommander jCommander;
 
         int user_id = -1;
+        String userName;
 
         try {
             // register JDBC driver
@@ -52,7 +53,7 @@ public class Main {
                 if (choice == 1) { // user choose to login
                     System.out.println("Input your user name:");
                     scanner.nextLine(); // read the extra blank line
-                    String userName = scanner.nextLine();
+                    userName = scanner.nextLine();
 
                     System.out.println("Input your user password:");
                     String password = scanner.nextLine();
@@ -74,17 +75,16 @@ public class Main {
                         System.err.println("The account doesn't exist!");
                     }
                 } else if (choice == 2) { // user choose to sign up
+                    System.out.println("Input your message: name and password required ");
+                    System.out.print(">");
+                    scanner.nextLine(); // read the extra blank line
+                    command = scanner.nextLine();
+
+                    add_user addUser = new add_user();
+                    commandTypes = new ArrayList();
+                    commandTypes.add((add_user) addUser);
+                    jCommander = JCommander.newBuilder().addCommand("add_user", addUser).build();
                     try {
-                        System.out.println("Input your message: name and password required ");
-                        System.out.print(">");
-                        scanner.nextLine(); // read the extra blank line
-                        command = scanner.nextLine();
-
-                        add_user addUser = new add_user();
-                        commandTypes = new ArrayList();
-                        commandTypes.add((add_user) addUser);
-                        jCommander = JCommander.newBuilder().addCommand("add_user", addUser).build();
-
                         jCommander.parse(command.split(" "));
                         Class commandType = Class.forName("command." + jCommander.getParsedCommand());
                         Method declaredMethod = commandType.getDeclaredMethod("run", Connection.class);
@@ -93,6 +93,8 @@ public class Main {
                                 c.run(connection);
                             }
                         }
+                    } catch (ParameterException e) {
+                        jCommander.usage();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -102,16 +104,15 @@ public class Main {
             }
             // for user to operate the system
             while (true) {
-                System.out.print(">");
+                System.out.print(userName + ">");
                 command = scanner.nextLine();
                 if (!command.equals("exit")) {
+                    add_user addUser = new add_user();
+                    commandTypes = new ArrayList();
+                    commandTypes.add((add_user) addUser);
+                    jCommander = JCommander.newBuilder().addCommand("add_user", addUser).build();
                     try {
-                        add_user addUser = new add_user();
-                        commandTypes = new ArrayList();
-                        commandTypes.add((add_user) addUser);
-                        jCommander = JCommander.newBuilder().addCommand("add_user", addUser).build();
-
-                        jCommander.parse(command.split(" "));
+                        jCommander.parse(command.split("\\s"));
                         Class commandType = Class.forName("command." + jCommander.getParsedCommand());
                         Method declaredMethod = commandType.getDeclaredMethod("run", Statement.class);
                         for (command c : commandTypes) {
@@ -119,6 +120,8 @@ public class Main {
                                 c.run(connection);
                             }
                         }
+                    } catch (ParameterException e) {
+                        jCommander.usage();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
