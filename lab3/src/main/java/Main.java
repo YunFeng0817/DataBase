@@ -13,7 +13,7 @@ import com.beust.jcommander.*;
 import command.*;
 import table.*;
 
-// add_user -name mark -password 123456 -gender MALE
+// add_user -name petter -password 123456 -gender MALE -email 294889365@qq.com -email 28@qq.com
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -21,9 +21,7 @@ public class Main {
         // JDBC driver name
         final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
         // JDBC url
-        final String DB_URL = "jdbc:mysql://localhost:3306/"; // in order to fix the
-        // query contains Chinese
-        // words
+        final String DB_URL = "jdbc:mysql://localhost:3306/social_network?characterEncoding=utf-8";
         final String USER = "root";
         final String PASS = "123456";
         Connection connection = null;
@@ -35,58 +33,59 @@ public class Main {
         List<command> commandTypes = new ArrayList();
         commandTypes.add((add_user) addUser);
         JCommander jCommander = JCommander.newBuilder().addCommand("add_user", addUser).build();
-        while (true) {
-            command = scanner.nextLine();
-            if (!command.equals("exit")) {
-                jCommander.parse(command.split(" "));
-                Class commandType = Class.forName("command." + jCommander.getParsedCommand());
-                Method declaredMethod = commandType.getDeclaredMethod("run", Statement.class);
-                for (command c : commandTypes) {
-                    if (commandType.isInstance(c)) {
-                        c.run(statement);
+
+        try {
+            // register JDBC driver
+            Class.forName(JDBC_DRIVER);
+
+            // establish connection with sql server
+            System.out.println("Connecting to SQL...");
+            connection = DriverManager.getConnection(DB_URL, USER, PASS);
+            statement = connection.createStatement();
+
+            // createDataBase(statement);
+
+            while (true) {
+                command = scanner.nextLine();
+                if (!command.equals("exit")) {
+                    jCommander.parse(command.split(" "));
+                    Class commandType = Class.forName("command." + jCommander.getParsedCommand());
+                    Method declaredMethod = commandType.getDeclaredMethod("run", Statement.class);
+                    for (command c : commandTypes) {
+                        if (commandType.isInstance(c)) {
+                            c.run(statement);
+                        }
                     }
-                }
-            } else
-                break;
+                } else
+                    break;
+            }
+            scanner.close();
+            System.out.println("Exit successfully!");
+            System.out.println("The SQL to be executed is: ");
+            System.out.println(sql);
+            ResultSet resultSet = statement.executeQuery(sql);
+            printTable(resultSet);
+            // close result set to release memory
+            resultSet.close();
+            statement.close();
+            connection.close();
+        } catch (SQLException se) {
+            se.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (statement != null)
+                    statement.close();
+            } catch (SQLException se2) {
+            }
+            try {
+                if (connection != null)
+                    connection.close();
+            } catch (SQLException se) {
+                se.printStackTrace();
+            }
         }
-        scanner.close();
-        System.out.println("Exit successfully!");
-
-        // try {
-        // // register JDBC driver
-        // Class.forName(JDBC_DRIVER);
-
-        // // establish connection with sql server
-        // System.out.println("Connecting to SQL...");
-        // connection = DriverManager.getConnection(DB_URL, USER, PASS);
-
-        // statement = connection.createStatement();
-        // // System.out.println("The SQL to be executed is: ");
-        // // System.out.println(sql);
-        // // ResultSet resultSet = statement.executeQuery(sql);
-        // // printTable(resultSet);
-        // // close result set to release memory
-        // // resultSet.close();
-        // createDataBase(statement);
-        // statement.close();
-        // connection.close();
-        // } catch (SQLException se) {
-        // se.printStackTrace();
-        // } catch (Exception e) {
-        // e.printStackTrace();
-        // } finally {
-        // try {
-        // if (statement != null)
-        // statement.close();
-        // } catch (SQLException se2) {
-        // }
-        // try {
-        // if (connection != null)
-        // connection.close();
-        // } catch (SQLException se) {
-        // se.printStackTrace();
-        // }
-        // }
         System.out.println("Goodbye!");
     }
 
@@ -134,7 +133,6 @@ public class Main {
         String[] SQLs = content.split(";");
         for (String sql : SQLs) {
             if (!sql.equals("\n")) {
-                System.out.println(sql);
                 statement.execute(sql);
             }
         }

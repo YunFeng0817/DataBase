@@ -220,46 +220,6 @@ AUTO_INCREMENT = 1000;
 
 USE `social_network`;
 
-DELIMITER $$
-USE `social_network`$$
-CREATE DEFINER = CURRENT_USER TRIGGER `social_network`.`log_BEFORE_INSERT` BEFORE INSERT ON `log` FOR EACH ROW
-BEGIN
-set new.update_time = now();
-END$$
-
-USE `social_network`$$
-CREATE DEFINER = CURRENT_USER TRIGGER `social_network`.`log_BEFORE_UPDATE` BEFORE UPDATE ON `log` FOR EACH ROW
-BEGIN
-set new.update_time = now();
-END$$
-
-USE `social_network`$$
-CREATE DEFINER = CURRENT_USER TRIGGER `social_network`.`reply_BEFORE_INSERT` BEFORE INSERT ON `reply` FOR EACH ROW
-BEGIN
-set new.reply_time = now();
-END$$
-
-USE `social_network`$$
-CREATE DEFINER = CURRENT_USER TRIGGER `social_network`.`reply_BEFORE_UPDATE` BEFORE UPDATE ON `reply` FOR EACH ROW
-BEGIN
-set new.reply_time = now();
-END$$
-
-USE `social_network`$$
-CREATE DEFINER = CURRENT_USER TRIGGER `social_network`.`share_BEFORE_INSERT` BEFORE INSERT ON `share` FOR EACH ROW
-BEGIN
-set new.share_time = now();
-END$$
-
-USE `social_network`$$
-CREATE DEFINER = CURRENT_USER TRIGGER `social_network`.`share_BEFORE_UPDATE` BEFORE UPDATE ON `share` FOR EACH ROW
-BEGIN
-set new.share_time = now();
-END$$
-
-
-DELIMITER ;
-
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;

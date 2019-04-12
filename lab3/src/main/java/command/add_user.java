@@ -14,7 +14,6 @@ public class add_user implements command {
         String sql = "insert into user(";
         String items = "";
         String values = "";
-        System.out.println(user.getPassword());
         if (user.getPassword() != null) {
             items += (items.equals("") ? "" : ",") + "password";
             values += (values.equals("") ? "" : ",") + "'" + user.getPassword() + "'";
@@ -33,11 +32,20 @@ public class add_user implements command {
         }
         if (user.getAddress() != null) {
             items += (items.equals("") ? "" : ",") + "address";
-            values += (values.equals("") ? "" : "," + "'") + user.getAddress() + "'";
+            values += (values.equals("") ? "" : ",") + "'" + user.getAddress() + "'";
         }
-        System.out.println(sql + items + ") values(" + values + ");");
+        sql = sql + items + ") values(" + values + ");";
+        statement.execute(sql);
         sql = "select user_id from user where name='" + user.getName() + "';";
-        // statement.execute(sql + values + ") values(" + items + ");");
+        ResultSet resultSet = statement.executeQuery(sql);
+        resultSet.next();
+        int user_id = resultSet.getInt("user_id");
+        if (user.getEmails().size() > 0) {
+            for (String email : user.getEmails()) {
+                sql = "insert into email(user_id,address) values(" + user_id + ",'" + email + "');";
+                statement.execute(sql);
+            }
+        }
     }
 
 }
