@@ -2,6 +2,18 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
+import java.lang.reflect.Method;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+import com.beust.jcommander.*;
+
+import command.*;
+import table.*;
+
+// add_user -name mark -password 123456 -gender MALE
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -16,41 +28,65 @@ public class Main {
         final String PASS = "123456";
         Connection connection = null;
         Statement statement = null;
-        try {
-            // register JDBC driver
-            Class.forName(JDBC_DRIVER);
 
-            // establish connection with sql server
-            System.out.println("Connecting to SQL...");
-            connection = DriverManager.getConnection(DB_URL, USER, PASS);
-
-            statement = connection.createStatement();
-            // System.out.println("The SQL to be executed is: ");
-            // System.out.println(sql);
-            // ResultSet resultSet = statement.executeQuery(sql);
-            // printTable(resultSet);
-            // close result set to release memory
-            // resultSet.close();
-            createDataBase(statement);
-            statement.close();
-            connection.close();
-        } catch (SQLException se) {
-            se.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (statement != null)
-                    statement.close();
-            } catch (SQLException se2) {
-            }
-            try {
-                if (connection != null)
-                    connection.close();
-            } catch (SQLException se) {
-                se.printStackTrace();
-            }
+        String command;
+        Scanner scanner = new Scanner(System.in);
+        add_user addUser = new add_user();
+        List<command> commandTypes = new ArrayList();
+        commandTypes.add((add_user) addUser);
+        JCommander jCommander = JCommander.newBuilder().addCommand("add_user", addUser).build();
+        while (true) {
+            command = scanner.nextLine();
+            if (!command.equals("exit")) {
+                jCommander.parse(command.split(" "));
+                Class commandType = Class.forName("command." + jCommander.getParsedCommand());
+                Method declaredMethod = commandType.getDeclaredMethod("run", Statement.class);
+                for (command c : commandTypes) {
+                    if (commandType.isInstance(c)) {
+                        c.run(statement);
+                    }
+                }
+            } else
+                break;
         }
+        scanner.close();
+        System.out.println("Exit successfully!");
+
+        // try {
+        // // register JDBC driver
+        // Class.forName(JDBC_DRIVER);
+
+        // // establish connection with sql server
+        // System.out.println("Connecting to SQL...");
+        // connection = DriverManager.getConnection(DB_URL, USER, PASS);
+
+        // statement = connection.createStatement();
+        // // System.out.println("The SQL to be executed is: ");
+        // // System.out.println(sql);
+        // // ResultSet resultSet = statement.executeQuery(sql);
+        // // printTable(resultSet);
+        // // close result set to release memory
+        // // resultSet.close();
+        // createDataBase(statement);
+        // statement.close();
+        // connection.close();
+        // } catch (SQLException se) {
+        // se.printStackTrace();
+        // } catch (Exception e) {
+        // e.printStackTrace();
+        // } finally {
+        // try {
+        // if (statement != null)
+        // statement.close();
+        // } catch (SQLException se2) {
+        // }
+        // try {
+        // if (connection != null)
+        // connection.close();
+        // } catch (SQLException se) {
+        // se.printStackTrace();
+        // }
+        // }
         System.out.println("Goodbye!");
     }
 
