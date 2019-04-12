@@ -9,6 +9,7 @@ public class user {
     @Parameter
     private List<String> parameters = new ArrayList<String>();
 
+    @Parameter(names = "-id", hidden = true)
     private int userID;
 
     @Parameter(names = "-name", description = "Your user name", required = true)

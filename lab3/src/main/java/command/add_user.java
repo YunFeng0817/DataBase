@@ -6,11 +6,12 @@ import java.sql.*;
 import table.user;
 
 @Parameters(commandDescription = "Register a new user")
-public class add_user implements command {
+public class add_user extends command {
     @ParametersDelegate
     private user user = new user();
 
-    public void run(Statement statement) throws SQLException {
+    public void run(Connection connection) throws SQLException {
+        Statement statement = connection.createStatement();
         String sql = "insert into user(";
         String items = "";
         String values = "";
@@ -40,12 +41,16 @@ public class add_user implements command {
         ResultSet resultSet = statement.executeQuery(sql);
         resultSet.next();
         int user_id = resultSet.getInt("user_id");
+        System.out.println("Your user id : " + user_id);
+        System.out.println("Your user name : " + user.getName());
         if (user.getEmails().size() > 0) {
             for (String email : user.getEmails()) {
                 sql = "insert into email(user_id,address) values(" + user_id + ",'" + email + "');";
                 statement.execute(sql);
             }
         }
+        resultSet.close();
+        statement.close();
     }
 
 }

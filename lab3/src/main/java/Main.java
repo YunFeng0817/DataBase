@@ -11,13 +11,14 @@ import java.util.Scanner;
 import com.beust.jcommander.*;
 
 import command.*;
-import table.*;
 
-// add_user -name petter -password 123456 -gender MALE -email 294889365@qq.com -email 28@qq.com
+// petter
+// 123456
+// add_user -name Start -password 123456 -gender MALE -email 294865@qq.com -email 2888@qq.com
+// add_user -name Tony -password 123456 -gender MALE
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        String sql = ""; // the final SQL sentence to be executed
         // JDBC driver name
         final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
         // JDBC url
@@ -25,14 +26,13 @@ public class Main {
         final String USER = "root";
         final String PASS = "123456";
         Connection connection = null;
-        Statement statement = null;
 
         String command;
         Scanner scanner = new Scanner(System.in);
-        add_user addUser = new add_user();
-        List<command> commandTypes = new ArrayList();
-        commandTypes.add((add_user) addUser);
-        JCommander jCommander = JCommander.newBuilder().addCommand("add_user", addUser).build();
+        List<command> commandTypes;
+        JCommander jCommander;
+
+        int user_id = -1;
 
         try {
             // register JDBC driver
@@ -41,44 +41,99 @@ public class Main {
             // establish connection with sql server
             System.out.println("Connecting to SQL...");
             connection = DriverManager.getConnection(DB_URL, USER, PASS);
-            statement = connection.createStatement();
 
             // createDataBase(statement);
-
+            // used to login or register
             while (true) {
+                System.out.println("1.login");
+                System.out.println("2.register");
+                System.out.println("3.exit");
+                int choice = scanner.nextInt();
+                if (choice == 1) { // user choose to login
+                    System.out.println("Input your user name:");
+                    scanner.nextLine(); // read the extra blank line
+                    String userName = scanner.nextLine();
+
+                    System.out.println("Input your user password:");
+                    String password = scanner.nextLine();
+                    PreparedStatement statement = connection
+                            .prepareStatement("select user_id, password from user where name=?;");
+                    statement.setString(1, userName);
+                    ResultSet resultSet = statement.executeQuery();
+                    if (resultSet.next()) {
+                        String realPassword = resultSet.getString("password");
+                        user_id = resultSet.getInt("user_id");
+                        if (realPassword.equals(password)) {
+                            System.out.println("Login successfully!");
+                            break;
+                        } else {
+                            System.err.println("Wrong password!");
+                        }
+                    } else {
+                        userName = null;
+                        System.err.println("The account doesn't exist!");
+                    }
+                } else if (choice == 2) { // user choose to sign up
+                    try {
+                        System.out.println("Input your message: name and password required ");
+                        System.out.print(">");
+                        scanner.nextLine(); // read the extra blank line
+                        command = scanner.nextLine();
+
+                        add_user addUser = new add_user();
+                        commandTypes = new ArrayList();
+                        commandTypes.add((add_user) addUser);
+                        jCommander = JCommander.newBuilder().addCommand("add_user", addUser).build();
+
+                        jCommander.parse(command.split(" "));
+                        Class commandType = Class.forName("command." + jCommander.getParsedCommand());
+                        Method declaredMethod = commandType.getDeclaredMethod("run", Connection.class);
+                        for (command c : commandTypes) {
+                            if (commandType.isInstance(c)) {
+                                c.run(connection);
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    System.exit(0);
+                }
+            }
+            // for user to operate the system
+            while (true) {
+                System.out.print(">");
                 command = scanner.nextLine();
                 if (!command.equals("exit")) {
-                    jCommander.parse(command.split(" "));
-                    Class commandType = Class.forName("command." + jCommander.getParsedCommand());
-                    Method declaredMethod = commandType.getDeclaredMethod("run", Statement.class);
-                    for (command c : commandTypes) {
-                        if (commandType.isInstance(c)) {
-                            c.run(statement);
+                    try {
+                        add_user addUser = new add_user();
+                        commandTypes = new ArrayList();
+                        commandTypes.add((add_user) addUser);
+                        jCommander = JCommander.newBuilder().addCommand("add_user", addUser).build();
+
+                        jCommander.parse(command.split(" "));
+                        Class commandType = Class.forName("command." + jCommander.getParsedCommand());
+                        Method declaredMethod = commandType.getDeclaredMethod("run", Statement.class);
+                        for (command c : commandTypes) {
+                            if (commandType.isInstance(c)) {
+                                c.run(connection);
+                            }
                         }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 } else
                     break;
             }
             scanner.close();
             System.out.println("Exit successfully!");
-            System.out.println("The SQL to be executed is: ");
-            System.out.println(sql);
-            ResultSet resultSet = statement.executeQuery(sql);
-            printTable(resultSet);
             // close result set to release memory
-            resultSet.close();
-            statement.close();
             connection.close();
         } catch (SQLException se) {
             se.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            try {
-                if (statement != null)
-                    statement.close();
-            } catch (SQLException se2) {
-            }
             try {
                 if (connection != null)
                     connection.close();
@@ -87,36 +142,6 @@ public class Main {
             }
         }
         System.out.println("Goodbye!");
-    }
-
-    /**
-     * automatically print the whole table according to query result
-     * 
-     * @param resultSet SQL query result
-     * @throws SQLException parse result exception
-     */
-    static void printTable(ResultSet resultSet) throws SQLException {
-        // see if the query result is NULL, if so, print empty result to the console
-        if (!resultSet.next()) {
-            System.out.println("Empty result");
-            return;
-        }
-        resultSet.previous(); // when check if result is NULL, the cursor had been move forward one unit
-
-        ResultSetMetaData resultMetaData = resultSet.getMetaData();
-        // print table property name
-        for (int i = 1; i <= resultMetaData.getColumnCount(); i++) {
-            System.out.print(resultMetaData.getColumnName(i) + "\t");
-        }
-        System.out.println("");
-        // print table value
-        while (resultSet.next()) {
-            for (int i = 1; i <= resultMetaData.getColumnCount(); i++) {
-                String columnValue = resultSet.getString(i);
-                System.out.print(columnValue + "\t");
-            }
-            System.out.println("");
-        }
     }
 
     static void createDataBase(Statement statement) throws IOException, SQLException {
