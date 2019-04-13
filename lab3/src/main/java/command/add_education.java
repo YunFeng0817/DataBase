@@ -5,7 +5,7 @@ import java.sql.*;
 
 import table.education;
 
-@Parameters(commandDescription = "Register a new user")
+@Parameters(commandDescription = "Add your education information")
 public class add_education extends command {
     @ParametersDelegate
     private education education = new education();

@@ -12,11 +12,10 @@ import com.beust.jcommander.*;
 
 import command.*;
 
-// petter
-// 123456
-// add_user -name Start -password 123456 -gender MALE -email 294865@qq.com -email 2888@qq.com
-// add_user -name Tony -password 123456 -gender MALE
+// add_user -name Tony -password 123456 -gender MALE -email 294865@qq.com -email 2888@qq.com
 
+// add_education -level undergraduate -start 2016-09-01 -end 2020-06-01 -school_name HIT -degree master
+// delete_education -education_id 4
 public class Main {
     public static void main(String[] args) throws Exception {
         // JDBC driver name
@@ -111,17 +110,21 @@ public class Main {
                     update_user update_user = new update_user();
                     add_education add_education = new add_education();
                     update_education update_education = new update_education();
+                    delete_education delete_education = new delete_education();
                     commandTypes = new ArrayList();
                     commandTypes.add(addUser);
                     commandTypes.add(update_user);
                     commandTypes.add(add_education);
                     commandTypes.add(update_education);
-                    jCommander = JCommander.newBuilder().addCommand("add_user", addUser).build();
+                    commandTypes.add(delete_education);
+                    jCommander = JCommander.newBuilder().addCommand("add_user", addUser)
+                            .addCommand("add_education", add_education).addCommand("update_user", update_user)
+                            .addCommand("delete_education", delete_education).build();
                     try {
-                        command += "-id " + user_id;
+                        command += " -id " + user_id;
                         jCommander.parse(command.split("\\s"));
                         Class commandType = Class.forName("command." + jCommander.getParsedCommand());
-                        Method declaredMethod = commandType.getDeclaredMethod("run", Statement.class);
+                        Method declaredMethod = commandType.getDeclaredMethod("run", Connection.class);
                         for (command c : commandTypes) {
                             if (commandType.isInstance(c)) {
                                 c.run(connection);
@@ -129,6 +132,7 @@ public class Main {
                         }
                     } catch (ParameterException e) {
                         jCommander.usage();
+                        e.printStackTrace();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

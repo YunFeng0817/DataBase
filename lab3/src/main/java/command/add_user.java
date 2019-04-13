@@ -2,6 +2,8 @@ package command;
 
 import com.beust.jcommander.*;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import table.user;
 
@@ -43,10 +45,24 @@ public class add_user extends command {
         int user_id = resultSet.getInt("user_id");
         System.out.println("Your user id : " + user_id);
         System.out.println("Your user name : " + user.getName());
+        List<String> addedEmail = new ArrayList<>();
         if (user.getEmails().size() > 0) {
             for (String email : user.getEmails()) {
                 sql = "insert into email(user_id,address) values(" + user_id + ",'" + email + "');";
-                statement.execute(sql);
+                try {
+                    statement.execute(sql);
+                    addedEmail.add(email);
+                } catch (SQLException e) {
+                    System.err.println("Emails add fail");
+                    sql = "delete from user where user_id=" + user_id;
+                    statement.execute(sql);
+                    for (String address : addedEmail) {
+                        sql = "delete from email where address='" + address + "';";
+                        statement.execute(sql);
+                    }
+                    System.err.println("User add fail");
+                    return;
+                }
             }
         }
         resultSet.close();

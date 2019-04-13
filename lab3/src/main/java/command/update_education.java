@@ -5,6 +5,7 @@ import java.sql.*;
 
 import table.education;
 
+@Parameters(commandDescription = "Update your education information")
 public class update_education extends command {
 
     @ParametersDelegate
@@ -31,7 +32,7 @@ public class update_education extends command {
             items += (items.equals("") ? "" : ",") + "school_name=" + "'" + education.getSchoolName() + "'";
         }
         if (!items.equals(""))
-            sql = sql + items + "where user_id=" + user.getUserID() + ";";
+            sql = sql + items + "where education_id=" + education.getEducation_id() + ";";
         statement.execute(sql);
         statement.close();
     }
