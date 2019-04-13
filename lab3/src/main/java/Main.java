@@ -109,9 +109,13 @@ public class Main {
                 if (!command.equals("exit")) {
                     add_user addUser = new add_user();
                     update_user update_user = new update_user();
+                    add_education add_education = new add_education();
+                    update_education update_education = new update_education();
                     commandTypes = new ArrayList();
                     commandTypes.add(addUser);
                     commandTypes.add(update_user);
+                    commandTypes.add(add_education);
+                    commandTypes.add(update_education);
                     jCommander = JCommander.newBuilder().addCommand("add_user", addUser).build();
                     try {
                         command += "-id " + user_id;
