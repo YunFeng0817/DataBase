@@ -218,9 +218,46 @@ SELECT friend_id,user.name as friend_name, birthday,gender,address
 FROM user,friend 
 WHERE friend_id=user.user_id;
 
-CREATE VIEW basic_information AS
-SELECT user.user_id,name ,birthday ,gender , user.address, email.address as email_address
-FROM user,email
-WHERE user.user_id = email.user_id;
+
+USE `social_network`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `social_network`.`log_BEFORE_INSERT` BEFORE INSERT ON `log` FOR EACH ROW
+BEGIN
+set new.update_time = now();
+END$$
+
+
+USE `social_network`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `social_network`.`log_BEFORE_UPDATE` BEFORE UPDATE ON `log` FOR EACH ROW
+BEGIN
+set new.update_time = now();
+END$$
+
+
+USE `social_network`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `social_network`.`reply_BEFORE_INSERT` BEFORE INSERT ON `reply` FOR EACH ROW
+BEGIN
+set new.reply_time = now();
+END$$
+
+
+USE `social_network`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `social_network`.`reply_BEFORE_UPDATE` BEFORE UPDATE ON `reply` FOR EACH ROW
+BEGIN
+set new.reply_time = now();
+END$$
+
+
+USE `social_network`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `social_network`.`share_BEFORE_INSERT` BEFORE INSERT ON `share` FOR EACH ROW
+BEGIN
+set new.share_time = now();
+END$$
+
+
+USE `social_network`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `social_network`.`share_BEFORE_UPDATE` BEFORE UPDATE ON `share` FOR EACH ROW
+BEGIN
+set new.share_time = now();
+END$$
 
 
