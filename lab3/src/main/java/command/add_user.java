@@ -14,6 +14,8 @@ public class add_user extends command {
 
     public void run(Connection connection) throws SQLException {
         Statement statement = connection.createStatement();
+        connection.setAutoCommit(false);
+        statement.execute("savepoint adduser;"); // confirm business to be atomic by setting save point
         String sql = "insert into user(";
         String items = "";
         String values = "";
@@ -43,28 +45,23 @@ public class add_user extends command {
         ResultSet resultSet = statement.executeQuery(sql);
         resultSet.next();
         int user_id = resultSet.getInt("user_id");
-        System.out.println("Your user id : " + user_id);
-        System.out.println("Your user name : " + user.getName());
-        List<String> addedEmail = new ArrayList<>();
         if (user.getEmails().size() > 0) {
             for (String email : user.getEmails()) {
                 sql = "insert into email(user_id,address) values(" + user_id + ",'" + email + "');";
                 try {
                     statement.execute(sql);
-                    addedEmail.add(email);
+                    statement.execute("commit");
                 } catch (SQLException e) {
                     System.err.println("Emails add fail");
-                    sql = "delete from user where user_id=" + user_id;
-                    statement.execute(sql);
-                    for (String address : addedEmail) {
-                        sql = "delete from email where address='" + address + "';";
-                        statement.execute(sql);
-                    }
+                    statement.execute("rollback to savepoint adduser;");
                     System.err.println("User add fail");
                     return;
                 }
             }
         }
+        connection.setAutoCommit(true);
+        System.out.println("Your user id : " + user_id);
+        System.out.println("Your user name : " + user.getName());
         resultSet.close();
         statement.close();
     }

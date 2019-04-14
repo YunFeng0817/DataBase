@@ -12,10 +12,12 @@ import com.beust.jcommander.*;
 
 import command.*;
 
-// add_user -name Tony -password 123456 -gender MALE -email 294865@qq.com -email 2888@qq.com
+// add_user -name test -password 123456 -gender MALE -birthday 1997-08-17 -email 2948865@qq.com 
+// add_user -name F -password 123456 -gender MALE -email 1235@qq.com -email 994847@qq.com -email 8394@qq.com  -email 38387@163.com
+// show_emails 
 
 // add_education -level undergraduate -start 2016-09-01 -end 2020-06-01 -school_name HIT -degree master
-// delete_education -education_id 4
+// delete_education -education_id 6
 public class Main {
     public static void main(String[] args) throws Exception {
         // JDBC driver name
@@ -111,15 +113,18 @@ public class Main {
                     add_education add_education = new add_education();
                     update_education update_education = new update_education();
                     delete_education delete_education = new delete_education();
+                    show_emails show_emails = new show_emails();
                     commandTypes = new ArrayList();
                     commandTypes.add(addUser);
                     commandTypes.add(update_user);
                     commandTypes.add(add_education);
                     commandTypes.add(update_education);
                     commandTypes.add(delete_education);
+                    commandTypes.add(show_emails);
                     jCommander = JCommander.newBuilder().addCommand("add_user", addUser)
                             .addCommand("add_education", add_education).addCommand("update_user", update_user)
-                            .addCommand("delete_education", delete_education).build();
+                            .addCommand("delete_education", delete_education).addCommand("show_emails", show_emails)
+                            .build();
                     try {
                         command += " -id " + user_id;
                         jCommander.parse(command.split("\\s"));

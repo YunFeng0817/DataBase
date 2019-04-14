@@ -218,6 +218,13 @@ SELECT friend_id,user.name as friend_name, birthday,gender,address
 FROM user,friend 
 WHERE friend_id=user.user_id;
 
+CREATE VIEW base_information AS
+SELECT user_id, gender, name, address
+FROM user
+WHERE user_id IN (
+  SELECT user_id
+  FROM email
+);
 
 USE `social_network`$$
 CREATE DEFINER = CURRENT_USER TRIGGER `social_network`.`log_BEFORE_INSERT` BEFORE INSERT ON `log` FOR EACH ROW
