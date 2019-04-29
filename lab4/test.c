@@ -11,7 +11,7 @@
 
 int main(int argc, char **argv)
 {
-    Buffer buf; /* A buffer */
+    Buffer buf;         /* A buffer */
     unsigned char *blk; /* A pointer to a block */
     int i = 0;
 
@@ -52,4 +52,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-

@@ -9,4 +9,4 @@ run: $(target_file)
 
 $(target_file): 
 	@gcc $(library) $(source) -o database.out;
-	@echo "Compile finish!"
+	@echo "Compile finished!"
