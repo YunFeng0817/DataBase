@@ -17,30 +17,65 @@ int main(int argc, char **argv)
 {
     srand(time(NULL)); // set random seed
 
-    // Buffer buf;         /* A buffer */
-    // unsigned char *blk; /* A pointer to a block */
-    // int i = 0;
+    Buffer buf;         /* A buffer */
+    unsigned char *blk; /* A pointer to a block */
+    int *blk_int = NULL;
+    int i = 0, block_index = 0;
+    int disk_address = 1;
 
-    // /* Initialize the buffer */
-    // if (!initBuffer(520, 64, &buf))
-    // {
-    //     perror("Buffer Initialization Failed!\n");
-    //     return -1;
-    // }
+    /* Initialize the buffer */
+    if (!initBuffer(520, 64, &buf))
+    {
+        perror("Buffer Initialization Failed!\n");
+        return -1;
+    }
 
-    // /* Get a new block in the buffer */
-    // blk = getNewBlockInBuffer(&buf);
+    /* Get a new block in the buffer */
+    blk = getNewBlockInBuffer(&buf);
+    blk_int = (int *)blk;
+    // generate data for relation R
+    for (block_index = 0; block_index < 16; block_index++)
+    {
+        /* Fill data into the block */
+        for (i = 0; i < 7; i++)
+        {
+            *(blk_int + 2 * i) = generateA();
+            *(blk_int + 2 * i + 1) = generateB();
+        }
 
-    // /* Fill data into the block */
-    // for (i = 0; i < 8; i++)
-    //     *(blk + i) = 'a' + i;
+        *(blk_int + 2 * i) = 0;
+        *(blk_int + 2 * i) = disk_address + 1;
+        /* Write the block to the hard disk */
+        if (writeBlockToDisk(blk, disk_address, &buf) != 0)
+        {
+            perror("Writing Block Failed!\n");
+            return -1;
+        }
+        disk_address += 1;
+    }
 
-    // /* Write the block to the hard disk */
-    // if (writeBlockToDisk(blk, 31415926, &buf) != 0)
-    // {
-    //     perror("Writing Block Failed!\n");
-    //     return -1;
-    // }
+    // generate data for relation S
+    for (block_index = 0; block_index < 32; block_index++)
+    {
+        /* Fill data into the block */
+        for (i = 0; i < 7; i++)
+        {
+            *(blk_int + 2 * i) = generateC();
+            *(blk_int + 2 * i + 1) = generateD();
+        }
+        *(blk_int + 2 * i) = 0;
+        if (block_index == 31)
+            *(blk_int + 2 * i + 1) = 0;
+        else
+            *(blk_int + 2 * i + 1) = disk_address + 1;
+        /* Write the block to the hard disk */
+        if (writeBlockToDisk(blk, disk_address, &buf) != 0)
+        {
+            perror("Writing Block Failed!\n");
+            return -1;
+        }
+        disk_address += 1;
+    }
 
     // /* Read the block from the hard disk */
     // if ((blk = readBlockFromDisk(31415926, &buf)) == NULL)
@@ -74,7 +109,7 @@ int generateC()
     return rand() % 41 + 20;
 }
 
-int generateB()
+int generateD()
 {
     return generateB();
 }

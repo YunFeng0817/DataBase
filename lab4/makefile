@@ -1,13 +1,24 @@
-source = init.c
+init = init.c
+print = print.c
 library = extmem.c
-target_file = database.out
+target_file = "database.out"
 database_file = *.blk
 
-run: $(target_file)
-	@echo "Run result:\n"
-	@./$(target_file)
-	@rm $(target_file) $(database_file)
-
-$(target_file): 
-	@gcc $(library) $(source) -o database.out;
+# print all data in database
+print: $(print)
+	@gcc $(library) $(print) -o $(target_file);
 	@echo "Compile finished!"
+	@./$(target_file)
+	@echo "print database successfully!:\n"
+
+# generate all data
+init: clean $(init)
+	@rm -rf /database/
+	@gcc $(library) $(init) -o $(target_file);
+	@echo "Compile finished!"
+	@./$(target_file)
+	@echo "Init database successfully!:\n"
+
+clean:
+	-@rm $(target_file)
+	

@@ -71,7 +71,7 @@ int dropBlockOnDisk(unsigned int addr)
 {
     char filename[40];
 
-    sprintf(filename, "%d.blk", addr);
+    sprintf(filename, "database/%d.blk", addr);
 
     if (remove(filename) == -1)
     {
@@ -104,7 +104,7 @@ unsigned char *readBlockFromDisk(unsigned int addr, Buffer *buf)
             blkPtr += buf->blkSize + 1;
     }
 
-    sprintf(filename, "%d.blk", addr);
+    sprintf(filename, "database/%d.blk", addr);
     FILE *fp = fopen(filename, "rb");
 
     if (!fp)
@@ -135,7 +135,7 @@ int writeBlockToDisk(unsigned char *blkPtr, unsigned int addr, Buffer *buf)
     char filename[40];
     unsigned char *bytePtr;
 
-    sprintf(filename, "%d.blk", addr);
+    sprintf(filename, "database/%d.blk", addr);
     FILE *fp = fopen(filename, "wb");
 
     if (!fp)
