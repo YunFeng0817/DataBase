@@ -1,6 +1,6 @@
 /*
- * init.c
- * init test data for lab
+ * print.c
+ * print all data in database
  */
 
 #include <stdlib.h>
