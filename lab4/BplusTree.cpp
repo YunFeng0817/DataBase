@@ -9,7 +9,7 @@ using namespace std;
 // STRUCTURE DEFINITION
 typedef struct treeNode
 {
-    bool is_root;
+    bool is_leaf;
     short numKeys;
     int height;
     int values[7];
@@ -165,7 +165,7 @@ int findKeyInsertPosition(int node, int key)
     int lastIndex = numKeys(getNode(node));
 
     int position = 0;
-    while (key > getNode(node)->values[position] && position < lastIndex)
+    while (key >= getNode(node)->values[position] && position < lastIndex)
     {
         position = position + 1;
     }
@@ -248,8 +248,10 @@ bool keyIsOnTree(int node, int key, int height)
 void insertInEmptyLeave(int leave, int key)
 {
     createNode();
+    getNode(disk_address - 1)->is_leaf = true;
     getNode(leave)->nodes[0] = disk_address - 1;
     createNode();
+    getNode(disk_address - 1)->is_leaf = true;
     getNode(leave)->nodes[1] = disk_address - 1;
 
     getNode(leave)->values[0] = key;
@@ -261,6 +263,7 @@ void insertInLeaveLastPosition(int leave, int key)
 
     getNode(leave)->nodes[lastIndex + 1] = getNode(leave)->nodes[lastIndex];
     createNode();
+    getNode(disk_address - 1)->is_leaf = true;
     getNode(leave)->nodes[lastIndex] = disk_address - 1;
     getNode(leave)->values[lastIndex] = key;
 }
@@ -273,6 +276,7 @@ void insertInPosition(int leave, int key, int index)
     shiftRightPositions(leave, index, lastIndex + 1);
 
     createNode();
+    getNode(disk_address - 1)->is_leaf = true;
     getNode(leave)->nodes[index + 1] = disk_address - 1;
 
     getNode(leave)->values[index] = key;
@@ -320,6 +324,8 @@ void insertInLeave(int leave, int key, int value)
             valueNode *value_node = (valueNode *)getNode(getNode(leave)->nodes[position]);
             int length = value_node->size;
             value_node->values[length * sizeof(int)] = value;
+            length++;
+            value_node->size = length;
             size--;
         }
         else
@@ -573,7 +579,7 @@ void printOrdered(int node, int height)
             {
                 if (getNode(node)->values[position] != (int)NULL)
                 {
-                    printf("%d ", getNode(node)->values[position]);
+                    printf("%d:%d ", getNode(node)->values[position], ((valueNode *)getNode(getNode(node)->nodes[position]))->size);
                 }
                 position++;
             }
@@ -602,6 +608,7 @@ void commandPrint()
 void createTree()
 {
     createNode();
+    getNode(root_address)->is_leaf = true;
 }
 
 // Run user commands
