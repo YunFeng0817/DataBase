@@ -16,6 +16,13 @@ typedef struct treeNode
     int nodes[7];
 } treeNode;
 
+typedef struct valueNode
+{
+    int size;
+    int values[14];
+    int nextBlock;
+} valueNode;
+
 Buffer buf;
 
 const int RA_VALUE = 40, SC_VALUE = 60;
@@ -237,10 +244,6 @@ bool keyIsOnTree(int node, int key, int height)
     return isOnTree;
 }
 
-//
-// START INSERTION METHODS
-//
-
 // The insert in leaves methods sets the value and creates emptys nodes to allow futures insertions
 void insertInEmptyLeave(int leave, int key)
 {
@@ -275,8 +278,7 @@ void insertInPosition(int leave, int key, int index)
     getNode(leave)->values[index] = key;
 }
 
-// Checks how it's the best way to insert in a given leave and do it
-void insertInLeave(int leave, int key)
+void insertInNonLeave(int leave, int key)
 {
     int size = numKeys(getNode(leave));
 
@@ -295,6 +297,43 @@ void insertInLeave(int leave, int key)
         else
         {
             insertInPosition(leave, key, position);
+        }
+    }
+
+    setNumKeys(getNode(leave), (size + 1));
+}
+
+// Checks how it's the best way to insert in a given leave and do it
+void insertInLeave(int leave, int key, int value)
+{
+    int size = numKeys(getNode(leave));
+
+    if (isEmptyNode(getNode(leave)))
+    {
+        insertInEmptyLeave(leave, key);
+    }
+    else
+    {
+        int position = findKeyPosition(leave, key);
+        if (position != -1)
+        {
+            valueNode *value_node = (valueNode *)getNode(getNode(leave)->nodes[position]);
+            int length = value_node->size;
+            value_node->values[length * sizeof(int)] = value;
+            size--;
+        }
+        else
+        {
+            int position = findKeyInsertPosition(leave, key);
+
+            if (position == size)
+            {
+                insertInLeaveLastPosition(leave, key);
+            }
+            else
+            {
+                insertInPosition(leave, key, position);
+            }
         }
     }
 
@@ -376,7 +415,7 @@ void keepOnlyMiddleElementInRoot(int node)
     int position = 0;
     int middleIndex = (int)(numKeys(getNode(node)) / 2);
 
-    insertInLeave(newNode, getNode(node)->values[middleIndex]);
+    insertInNonLeave(newNode, getNode(node)->values[middleIndex]);
 
     treeHeight++;
     // IF the whole tree was a leave until then
@@ -385,7 +424,8 @@ void keepOnlyMiddleElementInRoot(int node)
         int subNode = getNode(newNode)->nodes[0];
         while (position < middleIndex)
         {
-            insertInLeave(subNode, getNode(node)->values[position]);
+            insertInNonLeave(subNode, getNode(node)->values[position]);
+            getNode(subNode)->nodes[position] = getNode(node)->nodes[position];
             position++;
         }
         getNode(subNode)->nodes[position] = getNode(newNode)->nodes[1];
@@ -394,7 +434,8 @@ void keepOnlyMiddleElementInRoot(int node)
         subNode = getNode(newNode)->nodes[1];
         while (position <= maxOrder)
         {
-            insertInLeave(subNode, getNode(node)->values[position]);
+            insertInNonLeave(subNode, getNode(node)->values[position]);
+            getNode(subNode)->nodes[position - middleIndex] = getNode(node)->nodes[position];
             position++;
         }
     }
@@ -453,7 +494,7 @@ void insertInNode(int node, int key, int value, int parent, int height)
 {
     if (isLeave(height))
     {
-        insertInLeave(node, key);
+        insertInLeave(node, key, value);
 
         if (haveOverflow(getNode(node)))
         {
@@ -475,10 +516,7 @@ void insertInNode(int node, int key, int value, int parent, int height)
 // Process user key insert
 void commandInsert(int key, int value)
 {
-    if (!keyIsOnTree(root_address, key, 1))
-    {
-        insertInNode(root_address, key, value, 0, 1);
-    }
+    insertInNode(root_address, key, value, 0, 1);
 }
 
 // print the values as height sets to debug
