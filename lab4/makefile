@@ -7,10 +7,12 @@ target_file = "database.out"
 database_file = *.blk
 
 index: clean
+	-@rm ./data/*.blk
 	@g++ -g $(library) $(index) -o $(target_file);
 	@echo "Compile finished!"
 	@./$(target_file)
 	@echo "\nestablish database index successfully!\n"
+	@rm ./data/*.blk
 
 # print all data in database
 print: clean
@@ -21,7 +23,7 @@ print: clean
 
 # generate all data
 init: clean
-	@rm -rf /database/
+	@rm ./database/*.blk
 	@g++ -g $(library) $(init) -o $(target_file);
 	@echo "Compile finished!"
 	@./$(target_file)
