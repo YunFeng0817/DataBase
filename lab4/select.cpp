@@ -5,6 +5,8 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <iostream>
+#include <string.h>
 #include "extmem.h"
 
 void linear_select(Buffer buf, int *R_result, int *S_result);

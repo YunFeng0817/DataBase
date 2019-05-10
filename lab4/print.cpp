@@ -6,8 +6,6 @@
 #include <stdio.h>
 #include <iostream>
 #include <string.h>
-#include <set>
-#include <queue>
 #include "extmem.h"
 
 int main(int argc, char **argv)

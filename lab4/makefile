@@ -2,7 +2,7 @@ index = BplusTree.cpp
 select = select.cpp
 init = init.cpp
 print = print.cpp
-library = extmem.c
+library = extmem.cpp
 target_file = "database.out"
 database_file = *.blk
 
