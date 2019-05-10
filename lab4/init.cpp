@@ -5,7 +5,10 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <time.h>
+#include <iostream>
+#include <string.h>
+#include <set>
+#include <queue>
 #include "extmem.h"
 
 int generateA();
