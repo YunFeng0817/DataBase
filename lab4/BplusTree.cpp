@@ -252,14 +252,14 @@ void insertInEmptyLeave(int leave, int key)
     getNode(leave)->values[0] = key;
 }
 
-void insertInLeaveLastPosition(treeNode *leave, int key)
+void insertInLeaveLastPosition(int leave, int key)
 {
-    int lastIndex = numKeys(leave);
+    int lastIndex = numKeys(getNode(leave));
 
-    // leave->nodes[lastIndex + 1] = createNode(-1);
-    leave->nodes[lastIndex + 1] = leave->nodes[lastIndex];
-
-    leave->values[lastIndex] = key;
+    getNode(leave)->nodes[lastIndex + 1] = getNode(leave)->nodes[lastIndex];
+    createNode();
+    getNode(leave)->nodes[lastIndex] = disk_address - 1;
+    getNode(leave)->values[lastIndex] = key;
 }
 
 // This method insert in a position shifting values to right to allow a positional insert
@@ -290,7 +290,7 @@ void insertInLeave(int leave, int key)
 
         if (position == size)
         {
-            insertInLeaveLastPosition(getNode(leave), key);
+            insertInLeaveLastPosition(leave, key);
         }
         else
         {
@@ -604,6 +604,8 @@ int main()
     runUserIterations();
 
     writeAll();
+    getNode(root_address)->height = treeHeight;
+    cout << root_address << endl;
 
     return 0;
 }
