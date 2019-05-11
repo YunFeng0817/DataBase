@@ -616,7 +616,6 @@ void printOrdered(int node, int height)
 
     if (size > 0)
     {
-        cout << "test" << treeHeight << endl;
         if (isLeave(height))
         {
             while (position < size)
@@ -640,6 +639,41 @@ void printOrdered(int node, int height)
             printOrdered(getNode(node)->nodes[position], height + 1);
         }
     }
+}
+
+leaf_list *getResult(int node, int height)
+{
+    int size = numKeys(getNode(node));
+    int position = 0;
+    leaf_list *result;
+
+    if (size > 0)
+    {
+        if (isLeave(height))
+        {
+            result = (leaf_list *)malloc(sizeof(leaf_list));
+            memset(result, 0, sizeof(leaf_list));
+            result->leaves[result->size].key = getNode(node)->values[size - 1];
+            result->leaves[result->size].value_address = node;
+            result->size++;
+            int temp_node = getNode(node)->nodes[size];
+            int size = numKeys(getNode(node));
+            while (size > 0)
+            {
+                temp_node = getNode(node)->nodes[size];
+                size = numKeys(getNode(node));
+                result->leaves[result->size].key = getNode(node)->values[size - 1];
+                result->leaves[result->size].value_address = node;
+                result->size++;
+            }
+            return result;
+        }
+        else
+        {
+            result = getResult(getNode(node)->nodes[position], height + 1);
+        }
+    }
+    return result;
 }
 
 // Process user key print

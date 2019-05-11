@@ -19,11 +19,25 @@ typedef struct valueNode
     int nextBlock;
 } valueNode;
 
-treeNode *getNode(int address);
+typedef struct leaf_node
+{
+    int key;
+    int value_address;
+} leaf_node;
+
+typedef struct leaf_list
+{
+    int size;
+    leaf_node leaves[100];
+} leaf_list;
+
+treeNode *
+getNode(int address);
 int writeAll();
 void createTree();
 void createTree(int root_address, Buffer *buffer);
 void commandPrint();
 void commandInsert(int key, int value);
 int commandSearch(int key);
+leaf_list *getResult(int node, int height);
 #endif

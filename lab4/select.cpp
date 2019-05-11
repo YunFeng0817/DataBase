@@ -104,6 +104,15 @@ void linear_select(Buffer *buf, int *R_result, int *S_result)
     print_result(buf, R_result, S_result);
 }
 
+void binary_select(Buffer *buf, int *R_result, int *S_result)
+{
+    valueNode *blk = NULL; /* A pointer to a block */
+    int *int_blk = NULL;
+    freeBlockInBuffer((unsigned char *)R_result, buf);
+    freeBlockInBuffer((unsigned char *)S_result, buf);
+    createTree(R_root, buf);
+}
+
 void B_plus_tree_select(Buffer *buf, int *R_result, int *S_result)
 {
     valueNode *blk = NULL; /* A pointer to a block */
