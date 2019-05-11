@@ -598,6 +598,7 @@ void createTree()
     createNode();
     cout << "root " << disk_address - 1 << endl;
     root_address = disk_address - 1;
+    treeHeight = 1;
     getNode(root_address)->is_leaf = true;
 }
 

@@ -37,8 +37,8 @@ int main(int argc, char **argv)
         /* print one tuple in the block */
         for (i = 0; i < 7; i++)
         {
-            cout << *(blk_int + 2 * i) << " " << *(blk_int + 2 * i + 1) << endl;
-            commandInsert(*(blk_int + 2 * i), *(blk_int + 2 * i + 1));
+            cout << *(blk_int + 2 * i) << " " << disk_address << endl;
+            commandInsert(*(blk_int + 2 * i), disk_address);
         }
         disk_address += 1;
         // free block used in buffer
@@ -56,15 +56,15 @@ int main(int argc, char **argv)
         /* Read the block from the hard disk */
         if ((blk = readBlockFromDisk(disk_address, &buffer)) == NULL)
         {
-            perror("Reading Block Failed!\n");
+            perror("test Reading Block Failed!\n");
             return -1;
         }
         blk_int = (int *)blk;
         /* print one tuple in the block */
         for (i = 0; i < 7; i++)
         {
-            cout << *(blk_int + 2 * i) << " " << *(blk_int + 2 * i + 1) << endl;
-            commandInsert(*(blk_int + 2 * i), *(blk_int + 2 * i + 1));
+            cout << *(blk_int + 2 * i) << " " << disk_address << endl;
+            commandInsert(*(blk_int + 2 * i), disk_address);
         }
         disk_address += 1;
         // free block used in buffer
