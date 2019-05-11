@@ -44,7 +44,7 @@ int main(int argc, char **argv)
         // free block used in buffer
         freeBlockInBuffer(blk, &buffer);
     }
-    commandPrint();
+    // commandPrint();
     A_root = writeAll();
 
     createTree();
@@ -68,10 +68,9 @@ int main(int argc, char **argv)
         // free block used in buffer
         freeBlockInBuffer(blk, &buffer);
     }
-    commandPrint();
+    // commandPrint();
     B_root = writeAll();
     cout << A_root << endl;
     cout << B_root << endl;
-
     return 0;
 }

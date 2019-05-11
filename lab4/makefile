@@ -31,7 +31,7 @@ init: clean
 	@echo "\nInit database successfully!\n"
 
 select: clean
-	@g++ -g $(library) $(select) -o $(target_file);
+	@g++ -g $(library) $(BPlusTree) $(select) -o $(target_file);
 	@echo "Compile finished!"
 	@./$(target_file)
 	@echo "\nselect data from database successfully!\n"

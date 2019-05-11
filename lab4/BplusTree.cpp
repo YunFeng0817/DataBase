@@ -18,7 +18,7 @@ static int root_address = 100;
 static int disk_address = root_address;
 
 // Flag activated only for tests
-bool flagDebug = false;
+bool flagDebug = true;
 
 // Here it's defined the tree order, works better for even's higher than 2 numbers
 int maxOrder = 4;
@@ -71,6 +71,7 @@ int writeNode(treeNode *node, int address)
 
 int writeAll()
 {
+    getNode(root_address)->height = treeHeight;
     treeNode *blk;
     while (addresses.size() != 0)
     {
@@ -82,7 +83,6 @@ int writeAll()
             addresses.erase(addresses.begin());
         }
     }
-    getNode(root_address)->height = treeHeight;
     return root_address;
 }
 
@@ -616,6 +616,7 @@ void printOrdered(int node, int height)
 
     if (size > 0)
     {
+        cout << "test" << treeHeight << endl;
         if (isLeave(height))
         {
             while (position < size)
