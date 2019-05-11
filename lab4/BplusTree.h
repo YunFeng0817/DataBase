@@ -39,5 +39,5 @@ void createTree(int root_address, Buffer *buffer);
 void commandPrint();
 void commandInsert(int key, int value);
 int commandSearch(int key);
-leaf_list *getResult(int node, int height);
+leaf_list *commandGetResult(); // generate leave list
 #endif

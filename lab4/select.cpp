@@ -13,6 +13,7 @@ using namespace std;
 
 void B_plus_tree_select(Buffer *buf, int *R_result, int *S_result);
 void linear_select(Buffer *buf, int *R_result, int *S_result);
+void binary_select(Buffer *buf, int *R_result, int *S_result);
 void print_result(Buffer *buf, int *R_result, int *S_result);
 
 const int RA_VALUE = 40, SC_VALUE = 60;
@@ -32,7 +33,8 @@ int main(int argc, char **argv)
     R_result = (int *)getNewBlockInBuffer(&buf);
     S_result = (int *)getNewBlockInBuffer(&buf);
     // linear_select(&buf, R_result, S_result);
-    B_plus_tree_select(&buf, R_result, S_result);
+    binary_select(&buf, R_result, S_result);
+    // B_plus_tree_select(&buf, R_result, S_result);
 
     /* Write the block to the hard disk */
     if (writeBlockToDisk((unsigned char *)R_result, 49, &buf) != 0)
@@ -111,6 +113,13 @@ void binary_select(Buffer *buf, int *R_result, int *S_result)
     freeBlockInBuffer((unsigned char *)R_result, buf);
     freeBlockInBuffer((unsigned char *)S_result, buf);
     createTree(R_root, buf);
+    leaf_list *leaves;
+    leaves = commandGetResult();
+    for (int i = 0; i < leaves->size; i++)
+    {
+        cout << "key: " << leaves->leaves[i].key << endl;
+        cout << "value: " << leaves->leaves[i].value_address << endl;
+    }
 }
 
 void B_plus_tree_select(Buffer *buf, int *R_result, int *S_result)

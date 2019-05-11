@@ -653,18 +653,34 @@ leaf_list *getResult(int node, int height)
         {
             result = (leaf_list *)malloc(sizeof(leaf_list));
             memset(result, 0, sizeof(leaf_list));
-            result->leaves[result->size].key = getNode(node)->values[size - 1];
-            result->leaves[result->size].value_address = node;
-            result->size++;
+            position = 0;
+            while (position < size)
+            {
+                if (getNode(node)->values[position] != (int)NULL)
+                {
+                    result->leaves[result->size].key = getNode(node)->values[position];
+                    result->leaves[result->size].value_address = getNode(node)->nodes[position];
+                    result->size++;
+                }
+                position++;
+            }
             int temp_node = getNode(node)->nodes[size];
-            int size = numKeys(getNode(node));
+            int size = numKeys(getNode(temp_node));
             while (size > 0)
             {
-                temp_node = getNode(node)->nodes[size];
-                size = numKeys(getNode(node));
-                result->leaves[result->size].key = getNode(node)->values[size - 1];
-                result->leaves[result->size].value_address = node;
-                result->size++;
+                position = 0;
+                while (position < size)
+                {
+                    if (getNode(node)->values[position] != (int)NULL)
+                    {
+                        result->leaves[result->size].key = getNode(temp_node)->values[position];
+                        result->leaves[result->size].value_address = getNode(temp_node)->nodes[position];
+                        result->size++;
+                    }
+                    position++;
+                }
+                temp_node = getNode(temp_node)->nodes[size];
+                size = numKeys(getNode(temp_node));
             }
             return result;
         }
@@ -674,6 +690,11 @@ leaf_list *getResult(int node, int height)
         }
     }
     return result;
+}
+
+leaf_list *commandGetResult()
+{
+    getResult(root_address, 1);
 }
 
 // Process user key print
