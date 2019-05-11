@@ -13,10 +13,12 @@ const int RA_VALUE = 40, SC_VALUE = 60;
 vector<treeNode *> buffer_address;
 vector<int> addresses;
 
+// disk address of root node
+static int root_address = 100;
 static int disk_address = root_address;
 
 // Flag activated only for tests
-bool flagDebug = true;
+bool flagDebug = false;
 
 // Here it's defined the tree order, works better for even's higher than 2 numbers
 int maxOrder = 4;
@@ -67,7 +69,7 @@ int writeNode(treeNode *node, int address)
     freeBlockInBuffer((unsigned char *)node, &buf);
 }
 
-void writeAll()
+int writeAll()
 {
     treeNode *blk;
     while (addresses.size() != 0)
@@ -81,6 +83,7 @@ void writeAll()
         }
     }
     getNode(root_address)->height = treeHeight;
+    return root_address;
 }
 
 void clean_buffer()
@@ -206,31 +209,12 @@ void shiftLeftPositions(int node, int startPosition, int endPosition)
     }
 }
 
-// Check if the key is on tree recursively
-bool keyIsOnTree(int node, int key, int height)
-{
-    bool isOnTree = false;
-
-    if (numKeys(getNode(node)) != 0)
-    {
-        if (isLeave(height) && findKeyPosition(node, key) != -1)
-        {
-            isOnTree = true;
-        }
-        else
-        {
-            int position = findKeyInsertPosition(node, key);
-            isOnTree = keyIsOnTree(getNode(node)->nodes[position], key, height + 1);
-        }
-    }
-    return isOnTree;
-}
-
 // The insert in leaves methods sets the value and creates emptys nodes to allow futures insertions
-void insertInEmptyLeave(int leave, int key)
+void insertInEmptyLeave(int leave, int key, int value)
 {
     createNode();
-    getNode(disk_address - 1)->is_leaf = true;
+    ((valueNode *)getNode(disk_address - 1))->size++;
+    ((valueNode *)getNode(disk_address - 1))->values[0] = value;
     getNode(leave)->nodes[0] = disk_address - 1;
     createNode();
     getNode(disk_address - 1)->is_leaf = true;
@@ -239,26 +223,63 @@ void insertInEmptyLeave(int leave, int key)
     getNode(leave)->values[0] = key;
 }
 
-void insertInLeaveLastPosition(int leave, int key)
+// The insert in leaves methods sets the value and creates emptys nodes to allow futures insertions
+void insertInEmptyNonLeave(int leave, int key)
+{
+    createNode();
+    getNode(leave)->nodes[0] = disk_address - 1;
+    createNode();
+    getNode(disk_address - 1)->is_leaf = true;
+    getNode(leave)->nodes[1] = disk_address - 1;
+
+    getNode(leave)->values[0] = key;
+}
+
+void insertInLeaveLastPosition(int leave, int key, int value)
 {
     int lastIndex = numKeys(getNode(leave));
 
     getNode(leave)->nodes[lastIndex + 1] = getNode(leave)->nodes[lastIndex];
     createNode();
-    getNode(disk_address - 1)->is_leaf = true;
+    ((valueNode *)getNode(disk_address - 1))->size++;
+    ((valueNode *)getNode(disk_address - 1))->values[0] = value;
     getNode(leave)->nodes[lastIndex] = disk_address - 1;
     getNode(leave)->values[lastIndex] = key;
 }
 
 // This method insert in a position shifting values to right to allow a positional insert
-void insertInPosition(int leave, int key, int index)
+void insertInPosition(int leave, int key, int index, int value)
 {
     int lastIndex = numKeys(getNode(leave));
 
     shiftRightPositions(leave, index, lastIndex + 1);
 
     createNode();
-    getNode(disk_address - 1)->is_leaf = true;
+    ((valueNode *)getNode(disk_address - 1))->size++;
+    ((valueNode *)getNode(disk_address - 1))->values[0] = value;
+    getNode(leave)->nodes[index + 1] = disk_address - 1;
+
+    getNode(leave)->values[index] = key;
+}
+
+void insertInNonLeaveLastPosition(int leave, int key)
+{
+    int lastIndex = numKeys(getNode(leave));
+
+    getNode(leave)->nodes[lastIndex + 1] = getNode(leave)->nodes[lastIndex];
+    createNode();
+    getNode(leave)->nodes[lastIndex] = disk_address - 1;
+    getNode(leave)->values[lastIndex] = key;
+}
+
+// This method insert in a position shifting values to right to allow a positional insert
+void insertInNonPosition(int leave, int key, int index)
+{
+    int lastIndex = numKeys(getNode(leave));
+
+    shiftRightPositions(leave, index, lastIndex + 1);
+
+    createNode();
     getNode(leave)->nodes[index + 1] = disk_address - 1;
 
     getNode(leave)->values[index] = key;
@@ -270,7 +291,7 @@ void insertInNonLeave(int leave, int key)
 
     if (isEmptyNode(getNode(leave)))
     {
-        insertInEmptyLeave(leave, key);
+        insertInEmptyNonLeave(leave, key);
     }
     else
     {
@@ -278,11 +299,11 @@ void insertInNonLeave(int leave, int key)
 
         if (position == size)
         {
-            insertInLeaveLastPosition(leave, key);
+            insertInNonLeaveLastPosition(leave, key);
         }
         else
         {
-            insertInPosition(leave, key, position);
+            insertInNonPosition(leave, key, position);
         }
     }
 
@@ -296,7 +317,7 @@ void insertInLeave(int leave, int key, int value)
 
     if (isEmptyNode(getNode(leave)))
     {
-        insertInEmptyLeave(leave, key);
+        insertInEmptyLeave(leave, key, value);
     }
     else
     {
@@ -304,10 +325,20 @@ void insertInLeave(int leave, int key, int value)
         if (position != -1)
         {
             valueNode *value_node = (valueNode *)getNode(getNode(leave)->nodes[position]);
-            int length = value_node->size;
-            value_node->values[length] = value;
-            length++;
-            value_node->size = length;
+            bool flag = true;
+            for (int i = 0; i < value_node->size; i++)
+            {
+                if (value_node->values[i] == value)
+                {
+                    flag = false;
+                    break;
+                }
+            }
+            if (flag)
+            {
+                value_node->values[value_node->size] = value;
+                value_node->size++;
+            }
             size--;
         }
         else
@@ -316,11 +347,11 @@ void insertInLeave(int leave, int key, int value)
 
             if (position == size)
             {
-                insertInLeaveLastPosition(leave, key);
+                insertInLeaveLastPosition(leave, key, value);
             }
             else
             {
-                insertInPosition(leave, key, position);
+                insertInPosition(leave, key, position, value);
             }
         }
     }
@@ -336,7 +367,7 @@ void splitLeave(int node, int key, int height)
 
     int position = findKeyInsertPosition(node, key);
 
-    insertInPosition(node, key, position);
+    insertInNonPosition(node, key, position);
 
     treeNode *oldNode = getNode(getNode(node)->nodes[position]);
     treeNode *newNode = getNode(getNode(node)->nodes[position + 1]);
@@ -369,7 +400,7 @@ void splitNonLeave(int node, int key, int height)
 
     int position = findKeyInsertPosition(node, key);
 
-    insertInPosition(node, key, position);
+    insertInNonPosition(node, key, position);
 
     treeNode *oldNode = getNode(getNode(node)->nodes[position]);
     treeNode *newNode = getNode(getNode(node)->nodes[position + 1]);
@@ -392,6 +423,29 @@ void splitNonLeave(int node, int key, int height)
     setNumKeys(oldNode, numKeys(oldNode) - index - 1);
 
     setNumKeys(getNode(node), (size + 1));
+}
+
+int search(int node, int key, int height)
+{
+    int result = -1;
+    if (numKeys(getNode(node)) != 0)
+    {
+        if (isLeave(height) && findKeyPosition(node, key) != -1)
+        {
+            return getNode(node)->nodes[findKeyPosition(node, key)];
+        }
+        else
+        {
+            int position = findKeyInsertPosition(node, key);
+            result = search(getNode(node)->nodes[position], key, height + 1);
+        }
+    }
+    return result;
+}
+
+int commandSearch(int key)
+{
+    return search(root_address, key, 1);
 }
 
 // Special case when overflowing the root element
@@ -507,6 +561,13 @@ void commandInsert(int key, int value)
     insertInNode(root_address, key, value, 0, 1);
 }
 
+void createTree(int root_add, Buffer *buffer)
+{
+    buf = *buffer;
+    root_address = root_add;
+    treeHeight = getNode(root_address)->height;
+}
+
 // print the values as height sets to debug
 void printNode(int node, int height)
 {
@@ -561,7 +622,13 @@ void printOrdered(int node, int height)
             {
                 if (getNode(node)->values[position] != (int)NULL)
                 {
-                    printf("%d:%d ", getNode(node)->values[position], ((valueNode *)getNode(getNode(node)->nodes[position]))->size);
+                    printf("key: %d value:", getNode(node)->values[position], ((valueNode *)getNode(getNode(node)->nodes[position]))->size);
+                    int length = ((valueNode *)getNode(getNode(node)->nodes[position]))->size;
+                    for (int i = 0; i < length; i++)
+                    {
+                        printf("%d ", ((valueNode *)getNode(getNode(node)->nodes[position]))->values[i]);
+                    }
+                    printf("\n");
                 }
                 position++;
             }
@@ -596,7 +663,6 @@ void createTree()
         return;
     }
     createNode();
-    cout << "root " << disk_address - 1 << endl;
     root_address = disk_address - 1;
     treeHeight = 1;
     getNode(root_address)->is_leaf = true;

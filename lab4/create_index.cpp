@@ -37,17 +37,15 @@ int main(int argc, char **argv)
         /* print one tuple in the block */
         for (i = 0; i < 7; i++)
         {
-            cout << *(blk_int + 2 * i) << " " << disk_address << endl;
             commandInsert(*(blk_int + 2 * i), disk_address);
+            // commandInsert(*(blk_int + 2 * i), *(blk_int + 2 * i + 1));
         }
         disk_address += 1;
         // free block used in buffer
         freeBlockInBuffer(blk, &buffer);
     }
     commandPrint();
-    writeAll();
-    A_root = root_address;
-    cout << A_root << endl;
+    A_root = writeAll();
 
     createTree();
 
@@ -63,16 +61,17 @@ int main(int argc, char **argv)
         /* print one tuple in the block */
         for (i = 0; i < 7; i++)
         {
-            cout << *(blk_int + 2 * i) << " " << disk_address << endl;
             commandInsert(*(blk_int + 2 * i), disk_address);
+            // commandInsert(*(blk_int + 2 * i), *(blk_int + 2 * i + 1));
         }
         disk_address += 1;
         // free block used in buffer
         freeBlockInBuffer(blk, &buffer);
     }
     commandPrint();
-    writeAll();
-    B_root = root_address;
+    B_root = writeAll();
+    cout << A_root << endl;
+    cout << B_root << endl;
 
     return 0;
 }

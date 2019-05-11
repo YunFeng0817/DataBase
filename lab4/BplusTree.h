@@ -19,12 +19,11 @@ typedef struct valueNode
     int nextBlock;
 } valueNode;
 
-// disk address of root node
-static int root_address = 100;
-
 treeNode *getNode(int address);
-void writeAll();
+int writeAll();
 void createTree();
+void createTree(int root_address, Buffer *buffer);
 void commandPrint();
 void commandInsert(int key, int value);
+int commandSearch(int key);
 #endif

@@ -8,11 +8,14 @@
 #include <iostream>
 #include <string.h>
 #include "extmem.h"
+#include "BplusTree.h"
 
-void linear_select(Buffer buf, int *R_result, int *S_result);
-void print_result(Buffer buf, int *R_result, int *S_result);
+void B_plus_tree_select(Buffer *buf, int *R_result, int *S_result);
+void linear_select(Buffer *buf, int *R_result, int *S_result);
+void print_result(Buffer *buf, int *R_result, int *S_result);
 
 const int RA_VALUE = 40, SC_VALUE = 60;
+const int R_root = 132, S_root = 197;
 
 int main(int argc, char **argv)
 {
@@ -27,7 +30,7 @@ int main(int argc, char **argv)
     }
     R_result = (int *)getNewBlockInBuffer(&buf);
     S_result = (int *)getNewBlockInBuffer(&buf);
-    linear_select(buf, R_result, S_result);
+    linear_select(&buf, R_result, S_result);
 
     /* Write the block to the hard disk */
     if (writeBlockToDisk((unsigned char *)R_result, 49, &buf) != 0)
@@ -41,11 +44,11 @@ int main(int argc, char **argv)
         perror("Writing Block Failed!\n");
         return -1;
     }
-    print_result(buf, R_result, S_result);
+    print_result(&buf, R_result, S_result);
     return 0;
 }
 
-void linear_select(Buffer buf, int *R_result, int *S_result)
+void linear_select(Buffer *buf, int *R_result, int *S_result)
 {
     int *blk = NULL; /* A pointer to a block */
     int i = 0, block_index = 0, r_result_index = 0, s_result_index = 0;
@@ -54,7 +57,7 @@ void linear_select(Buffer buf, int *R_result, int *S_result)
     for (block_index = 0; block_index < 16; block_index++)
     {
         /* Read the block from the hard disk */
-        if ((blk = (int *)readBlockFromDisk(disk_address, &buf)) == NULL)
+        if ((blk = (int *)readBlockFromDisk(disk_address, buf)) == NULL)
         {
             perror("Reading Block Failed!\n");
             return;
@@ -70,14 +73,14 @@ void linear_select(Buffer buf, int *R_result, int *S_result)
         }
         disk_address += 1;
         // free block used in buffer
-        freeBlockInBuffer((unsigned char *)blk, &buf);
+        freeBlockInBuffer((unsigned char *)blk, buf);
     }
-    *(R_result + 2 * (buf.blkSize / 8 - 1)) = r_result_index;
+    *(R_result + 2 * (buf->blkSize / 8 - 1)) = r_result_index;
 
     for (block_index = 0; block_index < 32; block_index++)
     {
         /* Read the block from the hard disk */
-        if ((blk = (int *)readBlockFromDisk(disk_address, &buf)) == NULL)
+        if ((blk = (int *)readBlockFromDisk(disk_address, buf)) == NULL)
         {
             perror("Reading Block Failed!\n");
             return;
@@ -93,16 +96,34 @@ void linear_select(Buffer buf, int *R_result, int *S_result)
         }
         disk_address += 1;
         // free block used in buffer
-        freeBlockInBuffer((unsigned char *)blk, &buf);
+        freeBlockInBuffer((unsigned char *)blk, buf);
     }
     printf("s index: %d\n", s_result_index);
-    *(S_result + 2 * (buf.blkSize / 8 - 1)) = s_result_index;
+    *(S_result + 2 * (buf->blkSize / 8 - 1)) = s_result_index;
 }
 
-void print_result(Buffer buf, int *R_result, int *S_result)
+void B_plus_tree_select(Buffer *buf, int *R_result, int *S_result)
+{
+    valueNode *blk = NULL; /* A pointer to a block */
+    createTree(R_root, buf);
+    int value_node = commandSearch(RA_VALUE);
+    writeAll();
+    /* Read the block from the hard disk */
+    if ((blk = (valueNode *)readBlockFromDisk(value_node, buf)) == NULL)
+    {
+        perror("Reading Block Failed!\n");
+        return;
+    }
+    int length = blk->size;
+    for (int i = 0; i < length; i++)
+    {
+    }
+}
+
+void print_result(Buffer *buf, int *R_result, int *S_result)
 {
     int i = 0, block_index = 0, r_result_index = 0, s_result_index = 0;
-    r_result_index = *(R_result + 2 * (buf.blkSize / 8 - 1));
+    r_result_index = *(R_result + 2 * (buf->blkSize / 8 - 1));
     printf("R result:\n");
     printf("A\tB\n");
     for (i = 0; i < r_result_index; i++)
@@ -111,7 +132,7 @@ void print_result(Buffer buf, int *R_result, int *S_result)
         printf("%d\n", *(R_result + 2 * i + 1));
     }
 
-    s_result_index = *(S_result + 2 * (buf.blkSize / 8 - 1));
+    s_result_index = *(S_result + 2 * (buf->blkSize / 8 - 1));
     printf("\nS result:\n");
     printf("C\tD\n");
     for (i = 0; i < s_result_index; i++)
@@ -119,6 +140,7 @@ void print_result(Buffer buf, int *R_result, int *S_result)
         printf("%d\t", *(S_result + 2 * i));
         printf("%d\n", *(S_result + 2 * i + 1));
     }
+    printf("IO num: %d", buf->numIO);
 }
 
 // 40      503

@@ -9,21 +9,11 @@ database_file = *.blk
 
 index: clean
 	-@rm ./data/*.blk
-	cp ./database/*.blk ./data/
+	@cp ./database/*.blk ./data/
 	@g++ -g $(library) $(BPlusTree) $(CreateIndex)  -o $(target_file);
 	@echo "Compile finished!"
 	@./$(target_file)
 	@echo "\nestablish database index successfully!\n"
-	@rm ./data/*.blk
-
-i: clean
-	-@rm ./data/*.blk
-	cp ./database/*.blk ./data/
-	@g++ -g $(library) $(BPlusTree)  -o $(target_file);
-	@echo "Compile finished!"
-	@./$(target_file)
-	@echo "\nestablish database index successfully!\n"
-	@rm ./data/*.blk
 
 # print all data in database
 print: clean
