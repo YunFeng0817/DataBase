@@ -15,6 +15,7 @@ void B_plus_tree_select(Buffer *buf, int *R_result, int *S_result);
 void linear_select(Buffer *buf, int *R_result, int *S_result);
 void binary_select(Buffer *buf, int *R_result, int *S_result);
 void print_result(Buffer *buf, int *R_result, int *S_result);
+int binary_search(int value, leaf_list *leaves);
 
 const int RA_VALUE = 40, SC_VALUE = 60;
 const int R_root = 132, S_root = 197;
@@ -32,9 +33,31 @@ int main(int argc, char **argv)
     }
     R_result = (int *)getNewBlockInBuffer(&buf);
     S_result = (int *)getNewBlockInBuffer(&buf);
-    // linear_select(&buf, R_result, S_result);
+    cout << endl
+         << "linear select:" << endl;
+    linear_select(&buf, R_result, S_result);
+
+    if (!initBuffer(520, 64, &buf))
+    {
+        perror("Buffer Initialization Failed!\n");
+        return -1;
+    }
+    R_result = (int *)getNewBlockInBuffer(&buf);
+    S_result = (int *)getNewBlockInBuffer(&buf);
+    cout << endl
+         << "binary select:" << endl;
     binary_select(&buf, R_result, S_result);
-    // B_plus_tree_select(&buf, R_result, S_result);
+
+    if (!initBuffer(520, 64, &buf))
+    {
+        perror("Buffer Initialization Failed!\n");
+        return -1;
+    }
+    R_result = (int *)getNewBlockInBuffer(&buf);
+    S_result = (int *)getNewBlockInBuffer(&buf);
+    cout << endl
+         << "B plus tree index select:" << endl;
+    B_plus_tree_select(&buf, R_result, S_result);
 
     /* Write the block to the hard disk */
     if (writeBlockToDisk((unsigned char *)R_result, 49, &buf) != 0)
@@ -101,7 +124,6 @@ void linear_select(Buffer *buf, int *R_result, int *S_result)
         // free block used in buffer
         freeBlockInBuffer((unsigned char *)blk, buf);
     }
-    printf("s index: %d\n", s_result_index);
     *(S_result + 2 * (buf->blkSize / 8 - 1)) = s_result_index;
     print_result(buf, R_result, S_result);
 }
@@ -110,16 +132,111 @@ void binary_select(Buffer *buf, int *R_result, int *S_result)
 {
     valueNode *blk = NULL; /* A pointer to a block */
     int *int_blk = NULL;
+    int length;
     freeBlockInBuffer((unsigned char *)R_result, buf);
     freeBlockInBuffer((unsigned char *)S_result, buf);
     createTree(R_root, buf);
     leaf_list *leaves;
     leaves = commandGetResult();
-    for (int i = 0; i < leaves->size; i++)
+    writeAll();
+    int value_node = binary_search(RA_VALUE, leaves);
+    if (value_node != -1)
     {
-        cout << "key: " << leaves->leaves[i].key << endl;
-        cout << "value: " << leaves->leaves[i].value_address << endl;
+        value_node = leaves->leaves[value_node].value_address;
+        /* Read the block from the hard disk */
+        if ((blk = (valueNode *)readBlockFromDisk(value_node, buf)) == NULL)
+        {
+            perror("Reading Block Failed!\n");
+            return;
+        };
+
+        int length = blk->size;
+        printf("R result:\n");
+        printf("A\tB\n");
+        for (int i = 0; i < length; i++)
+        {
+            if ((int_blk = (int *)readBlockFromDisk(blk->values[i], buf)) == NULL)
+            {
+                perror("Reading Block Failed!\n");
+                return;
+            }
+            for (int j = 0; j < 7; j++)
+            {
+                if (*(int_blk + 2 * j) == RA_VALUE)
+                {
+                    printf("%d\t", *(int_blk + 2 * j));
+                    printf("%d\n", *(int_blk + 2 * j + 1));
+                }
+            }
+            freeBlockInBuffer((unsigned char *)int_blk, buf);
+        }
+        freeBlockInBuffer((unsigned char *)blk, buf);
     }
+
+    createTree(S_root, buf);
+    leaves = commandGetResult();
+    value_node = binary_search(SC_VALUE, leaves);
+    writeAll();
+    if (value_node != -1)
+    {
+        value_node = leaves->leaves[value_node].value_address;
+        /* Read the block from the hard disk */
+        if ((blk = (valueNode *)readBlockFromDisk(value_node, buf)) == NULL)
+        {
+            perror("Reading Block Failed!\n");
+            return;
+        }
+        length = blk->size;
+        printf("\nS result:\n");
+        printf("C\tD\n");
+        for (int i = 0; i < length; i++)
+        {
+            if ((int_blk = (int *)readBlockFromDisk(blk->values[i], buf)) == NULL)
+            {
+                perror("Reading Block Failed!\n");
+                return;
+            }
+            for (int j = 0; j < 7; j++)
+            {
+                if (*(int_blk + 2 * j) == SC_VALUE)
+                {
+                    printf("%d\t", *(int_blk + 2 * j));
+                    printf("%d\n", *(int_blk + 2 * j + 1));
+                }
+            }
+            freeBlockInBuffer((unsigned char *)int_blk, buf);
+        }
+    }
+    printf("IO num: %d\n", buf->numIO);
+}
+
+int binary_search(int value, leaf_list *leaves)
+{
+    int min = 0;
+    int max = leaves->size - 1;
+    int mid = max;
+    int result = -1;
+    while (min != max)
+    {
+        if (value < leaves->leaves[mid].key)
+        {
+            mid = (int)(min + mid) / 2;
+        }
+        else if (value > leaves->leaves[mid].key)
+        {
+            mid = (int)(max + mid) / 2;
+            if (mid > max)
+            {
+                break;
+            }
+        }
+        else
+        {
+            result = mid;
+            break;
+        }
+    }
+    return result;
 }
 
 void B_plus_tree_select(Buffer *buf, int *R_result, int *S_result)
@@ -188,8 +305,7 @@ void B_plus_tree_select(Buffer *buf, int *R_result, int *S_result)
         }
         freeBlockInBuffer((unsigned char *)int_blk, buf);
     }
-    writeAll();
-    printf("IO num: %d", buf->numIO);
+    printf("IO num: %d\n", buf->numIO);
 }
 
 void print_result(Buffer *buf, int *R_result, int *S_result)
@@ -212,7 +328,7 @@ void print_result(Buffer *buf, int *R_result, int *S_result)
         printf("%d\t", *(S_result + 2 * i));
         printf("%d\n", *(S_result + 2 * i + 1));
     }
-    printf("IO num: %d", buf->numIO);
+    printf("IO num: %d\n", buf->numIO);
 }
 
 // 40      503
