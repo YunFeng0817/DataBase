@@ -1,4 +1,5 @@
-index = BplusTree.cpp
+CreateIndex = create_index.cpp
+BPlusTree = BplusTree.cpp
 select = select.cpp
 init = init.cpp
 print = print.cpp
@@ -8,7 +9,17 @@ database_file = *.blk
 
 index: clean
 	-@rm ./data/*.blk
-	@g++ -g $(library) $(index) -o $(target_file);
+	cp ./database/*.blk ./data/
+	@g++ -g $(library) $(BPlusTree) $(CreateIndex)  -o $(target_file);
+	@echo "Compile finished!"
+	@./$(target_file)
+	@echo "\nestablish database index successfully!\n"
+	@rm ./data/*.blk
+
+i: clean
+	-@rm ./data/*.blk
+	cp ./database/*.blk ./data/
+	@g++ -g $(library) $(BPlusTree)  -o $(target_file);
 	@echo "Compile finished!"
 	@./$(target_file)
 	@echo "\nestablish database index successfully!\n"

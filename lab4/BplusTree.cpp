@@ -4,35 +4,16 @@
 #include <string.h>
 #include <vector>
 #include "extmem.h"
+#include "BplusTree.h"
 using namespace std;
 
-// STRUCTURE DEFINITION
-typedef struct treeNode
-{
-    bool is_leaf;
-    short numKeys;
-    int height;
-    int values[7];
-    int nodes[7];
-} treeNode;
-
-typedef struct valueNode
-{
-    int size;
-    int values[14];
-    int nextBlock;
-} valueNode;
-
 Buffer buf;
-
 const int RA_VALUE = 40, SC_VALUE = 60;
 
 vector<treeNode *> buffer_address;
 vector<int> addresses;
 
-// disk address of root node
-int root_address = 100;
-int disk_address = root_address;
+static int disk_address = root_address;
 
 // Flag activated only for tests
 bool flagDebug = true;
@@ -99,6 +80,7 @@ void writeAll()
             addresses.erase(addresses.begin());
         }
     }
+    getNode(root_address)->height = treeHeight;
 }
 
 void clean_buffer()
@@ -323,7 +305,7 @@ void insertInLeave(int leave, int key, int value)
         {
             valueNode *value_node = (valueNode *)getNode(getNode(leave)->nodes[position]);
             int length = value_node->size;
-            value_node->values[length * sizeof(int)] = value;
+            value_node->values[length] = value;
             length++;
             value_node->size = length;
             size--;
@@ -607,7 +589,15 @@ void commandPrint()
 // Allocate through malloc the needed resources
 void createTree()
 {
+    /* Initialize the buffer */
+    if (!initBuffer(520, 64, &buf))
+    {
+        perror("Buffer Initialization Failed!\n");
+        return;
+    }
     createNode();
+    cout << "root " << disk_address - 1 << endl;
+    root_address = disk_address - 1;
     getNode(root_address)->is_leaf = true;
 }
 
@@ -616,6 +606,7 @@ void runUserIterations()
 {
     char operation[60];
     int key = 0;
+    int value = 0;
 
     while (scanf("%s", operation) != EOF)
     {
@@ -625,8 +616,8 @@ void runUserIterations()
         }
         else if (strcmp("i", operation) == 0)
         {
-            scanf("%d", &key);
-            commandInsert(key, 1);
+            scanf("%d %d", &key, &value);
+            commandInsert(key, value);
         }
         else if (strcmp("p", operation) == 0)
         {
@@ -635,22 +626,14 @@ void runUserIterations()
     }
 }
 
-// The magic starts here!
-int main()
-{
-    /* Initialize the buffer */
-    if (!initBuffer(520, 64, &buf))
-    {
-        perror("Buffer Initialization Failed!\n");
-        return -1;
-    }
-    createTree();
+// // The magic starts here!
+// int main()
+// {
+//     createTree();
 
-    runUserIterations();
+//     runUserIterations();
 
-    writeAll();
-    getNode(root_address)->height = treeHeight;
-    cout << root_address << endl;
+//     writeAll();
 
-    return 0;
-}
+//     return 0;
+// }
