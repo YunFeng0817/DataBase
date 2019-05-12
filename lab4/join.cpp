@@ -6,6 +6,7 @@
 #include "BplusTree.h"
 using namespace std;
 
+void create_hash(Buffer *buf);
 void nest_loop_join(Buffer *buf);
 void print_result(int start_address, int n, Buffer *buf);
 void sort_merge_join(Buffer *buf);
@@ -22,7 +23,8 @@ int main()
         return -1;
     }
     // nest_loop_join(&buf);
-    sort_merge_join(&buf);
+    // sort_merge_join(&buf);
+    create_hash(&buf);
     return 0;
 }
 
@@ -201,4 +203,159 @@ void sort_merge_join(Buffer *buf)
     freeBlockInBuffer((unsigned char *)result_blk, buf);
     print_result(1000, result_address - 1000, buf);
     printf("\ncount = %d\n", result_count);
+}
+
+void create_hash(Buffer *buf)
+{
+    unsigned char *blk; // A pointer to a block
+    int *blk_int = NULL;
+    int i = 0, block_index = 0;
+    int disk_address = 1;                                     // data block address
+    int r_hash_address = 507;                                 // start block address of R relationship
+    int s_hash_address = 607;                                 // start block address of S relationship
+    const int HASH_NUM = 6;                                   // amount of hash bucket
+    int **hash_blks = (int **)malloc(sizeof(int) * HASH_NUM); // store hash bucket buffer block
+    int blk_num[HASH_NUM];                                    // store tuple amount of each bucket
+    bool first_blk_flag[HASH_NUM];
+    /* Initialize the buffer */
+    if (!initBuffer(520, 64, buf))
+    {
+        perror("Buffer Initialization Failed!\n");
+        return;
+    }
+    // init variable for R relation
+    for (int i = 0; i < HASH_NUM; i++)
+    {
+        hash_blks[i] = (int *)getNewBlockInBuffer(buf);
+        blk_num[i] = 0;
+        first_blk_flag[i] = true;
+    }
+    // generate hash bucket for R relation
+    for (block_index = 0; block_index < 16; block_index++)
+    {
+        /* Read the block from the hard disk */
+        blk = readBlockFromDisk(disk_address, buf);
+        blk_int = (int *)blk;
+        /* print one tuple in the block */
+        for (i = 0; i < 7; i++)
+        {
+            int index = *(blk_int + 2 * i) % HASH_NUM;
+            if (blk_num[index] < 7)
+            {
+                hash_blks[index][2 * blk_num[index]] = *(blk_int + 2 * i);
+                hash_blks[index][2 * blk_num[index] + 1] = *(blk_int + 2 * i + 1);
+                blk_num[index]++;
+            }
+
+            // if bucket is full
+            if (blk_num[index] == 7)
+            {
+                hash_blks[index][14] = 7;
+                hash_blks[index][15] = r_hash_address;
+                if (first_blk_flag[index])
+                {
+                    writeBlockToDisk((unsigned char *)hash_blks[index], index + 1, buf);
+                    first_blk_flag[index] = false;
+                }
+                else
+                {
+                    writeBlockToDisk((unsigned char *)hash_blks[index], r_hash_address, buf);
+                    r_hash_address++;
+                }
+                blk_num[index] = 0;
+                freeBlockInBuffer((unsigned char *)hash_blks[index], buf);
+                hash_blks[index] = (int *)getNewBlockInBuffer(buf);
+            }
+        }
+        disk_address += 1;
+        // free block used in buffer
+        freeBlockInBuffer(blk, buf);
+    }
+
+    // write buffer to files and init variable for S relation
+    for (int i = 0; i < HASH_NUM; i++)
+    {
+        if (blk_num[i] != 0)
+        {
+            hash_blks[i][14] = blk_num[i];
+            hash_blks[i][15] = r_hash_address;
+            if (first_blk_flag[i])
+            {
+                writeBlockToDisk((unsigned char *)hash_blks[i], i + 1, buf);
+                first_blk_flag[i] = false;
+            }
+            else
+            {
+                writeBlockToDisk((unsigned char *)hash_blks[i], r_hash_address, buf);
+                r_hash_address++;
+            }
+            blk_num[i] = 0;
+            freeBlockInBuffer((unsigned char *)hash_blks[i], buf);
+            hash_blks[i] = (int *)getNewBlockInBuffer(buf);
+        }
+        blk_num[i] = 0;
+        first_blk_flag[i] = true;
+    }
+
+    // generate hash bucket for R relation
+    for (block_index = 0; block_index < 32; block_index++)
+    {
+        /* Read the block from the hard disk */
+        blk = readBlockFromDisk(disk_address, buf);
+        blk_int = (int *)blk;
+        /* print one tuple in the block */
+        for (i = 0; i < 7; i++)
+        {
+            int index = *(blk_int + 2 * i) % HASH_NUM;
+            if (blk_num[index] < 7)
+            {
+                hash_blks[index][2 * blk_num[index]] = *(blk_int + 2 * i);
+                hash_blks[index][2 * blk_num[index] + 1] = *(blk_int + 2 * i + 1);
+                blk_num[index]++;
+            }
+            if (blk_num[index] == 7)
+            {
+                hash_blks[index][14] = 7;
+                hash_blks[index][15] = r_hash_address;
+                if (first_blk_flag[index])
+                {
+                    writeBlockToDisk((unsigned char *)hash_blks[index], index + 1, buf);
+                    first_blk_flag[index] = false;
+                }
+                else
+                {
+                    writeBlockToDisk((unsigned char *)hash_blks[index], s_hash_address, buf);
+                    s_hash_address++;
+                }
+                blk_num[index] = 0;
+                freeBlockInBuffer((unsigned char *)hash_blks[index], buf);
+                hash_blks[index] = (int *)getNewBlockInBuffer(buf);
+            }
+            disk_address += 1;
+            // free block used in buffer
+            freeBlockInBuffer(blk, buf);
+        }
+    }
+    // write buffer to files
+    for (int i = 0; i < HASH_NUM; i++)
+    {
+        if (blk_num[i] != 0)
+        {
+            hash_blks[i][14] = blk_num[i];
+            hash_blks[i][15] = r_hash_address;
+            if (first_blk_flag[i])
+            {
+                writeBlockToDisk((unsigned char *)hash_blks[i], i + 1, buf);
+                first_blk_flag[i] = false;
+            }
+            else
+            {
+                writeBlockToDisk((unsigned char *)hash_blks[i], r_hash_address, buf);
+                r_hash_address++;
+            }
+            blk_num[i] = 0;
+            freeBlockInBuffer((unsigned char *)hash_blks[i], buf);
+        }
+    }
+    free(hash_blks);
 }
