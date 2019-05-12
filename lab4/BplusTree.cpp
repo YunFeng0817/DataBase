@@ -257,7 +257,7 @@ void insertInPosition(int leave, int key, int index, int value)
     createNode();
     ((valueNode *)getNode(disk_address - 1))->size++;
     ((valueNode *)getNode(disk_address - 1))->values[0] = value;
-    getNode(leave)->nodes[index + 1] = disk_address - 1;
+    getNode(leave)->nodes[index] = disk_address - 1;
 
     getNode(leave)->values[index] = key;
 }

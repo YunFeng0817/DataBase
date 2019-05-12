@@ -17,7 +17,7 @@ void binary_select(Buffer *buf, int *R_result, int *S_result);
 void print_result(Buffer *buf, int *R_result, int *S_result);
 int binary_search(int value, leaf_list *leaves);
 
-const int RA_VALUE = 40, SC_VALUE = 25;
+const int RA_VALUE = 40, SC_VALUE = 60;
 const int R_root = 132, S_root = 197;
 
 int main(int argc, char **argv)

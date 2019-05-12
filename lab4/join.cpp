@@ -202,25 +202,3 @@ void sort_merge_join(Buffer *buf)
     print_result(1000, result_address - 1000, buf);
     printf("\ncount = %d\n", result_count);
 }
-
-// key: 20value: 621
-// key: 20value: 705
-// key: 20value: 916
-// key: 20value: 584
-// key: 20value: 255
-// key: 20value: 413
-
-// key: 40value: 996
-// key: 40value: 400
-// key: 40value: 271
-// key: 40value: 128
-// key: 40value: 126
-// key: 40value: 292
-// key: 40value: 454
-// key: 40value: 996
-// key: 40value: 400
-// key: 40value: 271
-// key: 40value: 128
-// key: 40value: 126
-// key: 40value: 292
-// key: 40value: 454
