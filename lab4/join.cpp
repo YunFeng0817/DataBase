@@ -14,6 +14,7 @@ void hash_join(Buffer *buf);
 
 const int R_root = 132, S_root = 197; // root address of B plus tree index
 const int HASH_NUM = 6;               // amount of hash bucket
+const bool DebugFlag = false;         // if run in debug mode
 int r_hash_start_address = 500, s_hash_start_address = 750;
 int r_buckets_num[HASH_NUM], s_buckets_num[HASH_NUM];
 
@@ -26,9 +27,27 @@ int main()
         perror("Buffer Initialization Failed!\n");
         return -1;
     }
-    // nest_loop_join(&buf);
-    // sort_merge_join(&buf);
+    cout << "nest loop join result:" << endl;
+    nest_loop_join(&buf);
+    freeBuffer(&buf);
+    /* Initialize the buffer */
+    if (!initBuffer(520, 64, &buf))
+    {
+        perror("Buffer Initialization Failed!\n");
+        return -1;
+    }
+    cout << "sort merge join result:" << endl;
+    sort_merge_join(&buf);
+    freeBuffer(&buf);
+    /* Initialize the buffer */
+    if (!initBuffer(520, 64, &buf))
+    {
+        perror("Buffer Initialization Failed!\n");
+        return -1;
+    }
+    cout << "hash join result:" << endl;
     hash_join(&buf);
+    freeBuffer(&buf);
     return 0;
 }
 
@@ -42,19 +61,23 @@ int main()
 
 void print_result(int start_address, int n, Buffer *buf)
 {
-    int *blk;
-    cout << "Join result: " << endl;
-    cout << "RA/SC\tRB\tSD" << endl;
-    for (int i = start_address; i < start_address + n; i++)
+    if (DebugFlag)
     {
-        blk = (int *)readBlockFromDisk(i, buf);
-
-        for (int j = 0; j < 15; j = j + 3)
+        int *blk;
+        cout << "Join result: " << endl;
+        cout << "RA/SC\tRB\tSD" << endl;
+        for (int i = start_address; i < start_address + n; i++)
         {
-            cout << *(blk + j) << "\t" << *(blk + j + 1) << "\t" << *(blk + j + 2) << endl;
+            blk = (int *)readBlockFromDisk(i, buf);
+
+            for (int j = 0; j < 15; j = j + 3)
+            {
+                cout << *(blk + j) << "\t" << *(blk + j + 1) << "\t" << *(blk + j + 2) << endl;
+            }
+            freeBlockInBuffer((unsigned char *)blk, buf);
         }
-        freeBlockInBuffer((unsigned char *)blk, buf);
     }
+    cout << "IO num: " << buf->numIO << endl;
 }
 
 void nest_loop_join(Buffer *buf)
@@ -113,8 +136,8 @@ void nest_loop_join(Buffer *buf)
         freeBlockInBuffer((unsigned char *)r_blk, buf);
     }
     print_result(1000, result_address - 1000, buf);
-    cout << endl
-         << "count = " << result_count << endl;
+    cout << "count = " << result_count << endl
+         << endl;
 }
 
 void sort_merge_join(Buffer *buf)
@@ -160,7 +183,6 @@ void sort_merge_join(Buffer *buf)
                                     if (*(s_int_blk + 2 * sj) == s_leaves->leaves[si].key) // if R.A = S.C
                                     {
                                         d = *(s_int_blk + 2 * sj + 1);
-                                        cout << "key: " << s_leaves->leaves[si].key << "value: " << d << endl;
 
                                         // start to add new tuple to result block
                                         if (property_count == 0)
@@ -207,8 +229,8 @@ void sort_merge_join(Buffer *buf)
     writeBlockToDisk((unsigned char *)result_blk, result_address, buf);
     freeBlockInBuffer((unsigned char *)result_blk, buf);
     print_result(1000, result_address - 1000, buf);
-    cout << endl
-         << "count = " << result_count << endl;
+    cout << "count = " << result_count << endl
+         << endl;
 }
 
 void create_hash(Buffer *buf)
@@ -351,7 +373,7 @@ void hash_join(Buffer *buf)
                 while (s_bucket_index < s_buckets_num[bucket_index])
                 {
                     s_blk = (int *)readBlockFromDisk(s_hash_start_address + bucket_index + s_bucket_index * HASH_NUM, buf);
-                    int s_bucket_size = r_blk[14];
+                    int s_bucket_size = s_blk[14];
                     for (int sj = 0; sj < s_bucket_size; sj++)
                     {
                         c = *(s_blk + 2 * sj);
@@ -389,7 +411,8 @@ void hash_join(Buffer *buf)
     }
     writeBlockToDisk((unsigned char *)result_blk, result_address, buf);
     freeBlockInBuffer((unsigned char *)result_blk, buf);
+
     print_result(1000, result_address - 1000, buf);
-    cout << endl
-         << "count = " << result_count << endl;
+    cout << "count = " << result_count << endl
+         << endl;
 }
