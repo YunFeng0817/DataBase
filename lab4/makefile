@@ -1,3 +1,4 @@
+join = join.cpp
 projection = projection.cpp
 CreateIndex = create_index.cpp
 BPlusTree = BplusTree.cpp
@@ -7,6 +8,12 @@ print = print.cpp
 library = extmem.cpp
 target_file = "database.out"
 database_file = *.blk
+
+join: clean
+	@g++ -g $(library) $(BPlusTree) $(join) -o $(target_file);
+	@echo "Compile finished!"
+	@./$(target_file)
+	@echo "\njoin operation successfully!\n"
 
 projection: clean
 	@g++ -g $(library) $(BPlusTree) $(projection) -o $(target_file);
