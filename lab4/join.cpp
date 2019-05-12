@@ -1,5 +1,5 @@
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <iostream>
 #include <string.h>
 #include "extmem.h"
@@ -13,6 +13,9 @@ void sort_merge_join(Buffer *buf);
 void hash_join(Buffer *buf);
 
 const int R_root = 132, S_root = 197; // root address of B plus tree index
+const int HASH_NUM = 6;               // amount of hash bucket
+int r_hash_start_address = 500, s_hash_start_address = 750;
+int r_buckets_num[HASH_NUM], s_buckets_num[HASH_NUM];
 
 int main()
 {
@@ -110,7 +113,8 @@ void nest_loop_join(Buffer *buf)
         freeBlockInBuffer((unsigned char *)r_blk, buf);
     }
     print_result(1000, result_address - 1000, buf);
-    printf("\ncount = %d\n", result_count);
+    cout << endl
+         << "count = " << result_count << endl;
 }
 
 void sort_merge_join(Buffer *buf)
@@ -203,7 +207,8 @@ void sort_merge_join(Buffer *buf)
     writeBlockToDisk((unsigned char *)result_blk, result_address, buf);
     freeBlockInBuffer((unsigned char *)result_blk, buf);
     print_result(1000, result_address - 1000, buf);
-    printf("\ncount = %d\n", result_count);
+    cout << endl
+         << "count = " << result_count << endl;
 }
 
 void create_hash(Buffer *buf)
@@ -212,20 +217,14 @@ void create_hash(Buffer *buf)
     int *blk_int = NULL;
     int block_index = 0;
     int disk_address = 1;                                       // data block address
-    int r_start_hash = 501;                                     // start block address for R relation hash buckets
-    int s_start_hash = 601;                                     // start block address for S relation hash buckets
-    int r_hash_address = 507;                                   // available block address of R relationship
-    int s_hash_address = 607;                                   // available block address of S relationship
-    const int HASH_NUM = 6;                                     // amount of hash bucket
     int **hash_blks = (int **)malloc(sizeof(int *) * HASH_NUM); // store hash bucket buffer block
     int blk_num[HASH_NUM];                                      // store tuple amount of each bucket
-    bool first_blk_flag[HASH_NUM];
 
     // init variable for R relation
     for (int i = 0; i < HASH_NUM; i++)
     {
         blk_num[i] = 0;
-        first_blk_flag[i] = true;
+        r_buckets_num[i] = 0;
     }
     memset(hash_blks, 0, sizeof(int *) * HASH_NUM);
     // generate hash bucket for R relation
@@ -242,16 +241,8 @@ void create_hash(Buffer *buf)
             {
                 hash_blks[index] = (int *)getNewBlockInBuffer(buf);
                 memset(hash_blks[index], 0, buf->blkSize);
-                if (first_blk_flag[index])
-                {
-                    hash_blks[index][15] = r_start_hash + index;
-                    first_blk_flag[index] = false;
-                }
-                else
-                {
-                    hash_blks[index][15] = r_hash_address;
-                    r_hash_address++;
-                }
+                hash_blks[index][15] = r_hash_start_address + index + r_buckets_num[index] * HASH_NUM;
+                r_buckets_num[index]++;
             }
             hash_blks[index][2 * blk_num[index]] = *(blk_int + 2 * i);
             hash_blks[index][2 * blk_num[index] + 1] = *(blk_int + 2 * i + 1);
@@ -280,11 +271,11 @@ void create_hash(Buffer *buf)
             hash_blks[i][14] = blk_num[i];
 
             writeBlockToDisk((unsigned char *)hash_blks[i], hash_blks[i][15], buf);
-            blk_num[i] = 0;
             freeBlockInBuffer((unsigned char *)hash_blks[i], buf);
             hash_blks[i] = NULL;
         }
-        first_blk_flag[i] = true;
+        blk_num[i] = 0;
+        s_buckets_num[i] = 0;
     }
 
     memset(hash_blks, 0, sizeof(int *) * HASH_NUM);
@@ -303,16 +294,8 @@ void create_hash(Buffer *buf)
             {
                 hash_blks[index] = (int *)getNewBlockInBuffer(buf);
                 memset(hash_blks[index], 0, buf->blkSize);
-                if (first_blk_flag[index])
-                {
-                    hash_blks[index][15] = s_start_hash + index;
-                    first_blk_flag[index] = false;
-                }
-                else
-                {
-                    hash_blks[index][15] = s_hash_address;
-                    s_hash_address++;
-                }
+                hash_blks[index][15] = s_hash_start_address + index + s_buckets_num[index] * HASH_NUM;
+                s_buckets_num[index]++;
             }
             hash_blks[index][2 * blk_num[index]] = *(blk_int + 2 * i);
             hash_blks[index][2 * blk_num[index] + 1] = *(blk_int + 2 * i + 1);
@@ -347,12 +330,66 @@ void create_hash(Buffer *buf)
 
 void hash_join(Buffer *buf)
 {
-    int r_start_hash = 501; // start block address for R relation hash buckets
-    int s_start_hash = 601; // start block address for S relation hash buckets
     int result_address = 1000;
     int property_count = 0; // count result property
     int result_count = 0;   // count result tuple
+    int bucket_index = 0;
     int a, b, c, d;
     int *r_blk = NULL, *s_blk = NULL, *result_blk = NULL;
     create_hash(buf);
+    for (bucket_index = 0; bucket_index < HASH_NUM; bucket_index++)
+    {
+        int r_bucket_index = 0;
+        while (r_bucket_index < r_buckets_num[bucket_index])
+        {
+            r_blk = (int *)readBlockFromDisk(r_hash_start_address + bucket_index + r_bucket_index * HASH_NUM, buf);
+            int r_bucket_size = r_blk[14];
+            for (int rj = 0; rj < r_bucket_size; rj++)
+            {
+                a = *(r_blk + 2 * rj);
+                int s_bucket_index = 0;
+                while (s_bucket_index < s_buckets_num[bucket_index])
+                {
+                    s_blk = (int *)readBlockFromDisk(s_hash_start_address + bucket_index + s_bucket_index * HASH_NUM, buf);
+                    int s_bucket_size = r_blk[14];
+                    for (int sj = 0; sj < s_bucket_size; sj++)
+                    {
+                        c = *(s_blk + 2 * sj);
+                        if (a == c)
+                        {
+                            b = *(r_blk + 2 * rj + 1);
+                            d = *(s_blk + 2 * sj + 1);
+                            if (property_count == 0)
+                            {
+                                result_blk = (int *)getNewBlockInBuffer(buf);
+                            }
+                            *(result_blk + property_count) = a;
+                            *(result_blk + property_count + 1) = b;
+                            *(result_blk + property_count + 2) = d;
+                            result_count++;
+                            property_count += 3;
+
+                            if (property_count == 15) // if result block is full
+                            {
+                                *(result_blk + property_count) = result_address + 1; // last four bytes are used to store next block address
+                                writeBlockToDisk((unsigned char *)result_blk, result_address, buf);
+                                result_address++;
+                                freeBlockInBuffer((unsigned char *)result_blk, buf);
+                                property_count = 0;
+                            }
+                        }
+                    }
+                    freeBlockInBuffer((unsigned char *)s_blk, buf);
+                    s_bucket_index++;
+                }
+            }
+            freeBlockInBuffer((unsigned char *)r_blk, buf);
+            r_bucket_index++;
+        }
+    }
+    writeBlockToDisk((unsigned char *)result_blk, result_address, buf);
+    freeBlockInBuffer((unsigned char *)result_blk, buf);
+    print_result(1000, result_address - 1000, buf);
+    cout << endl
+         << "count = " << result_count << endl;
 }
