@@ -17,12 +17,11 @@ void binary_select(Buffer *buf, int *R_result, int *S_result);
 void print_result(Buffer *buf, int *R_result, int *S_result);
 int binary_search(int value, leaf_list *leaves);
 
-const int RA_VALUE = 40, SC_VALUE = 60;
+const int RA_VALUE = 40, SC_VALUE = 25;
 const int R_root = 132, S_root = 197;
 
 int main(int argc, char **argv)
 {
-
     Buffer buf; /* A buffer */
     int *S_result = NULL, *R_result = NULL;
     /* Initialize the buffer */
@@ -214,96 +213,98 @@ int binary_search(int value, leaf_list *leaves)
 {
     int min = 0;
     int max = leaves->size - 1;
-    int mid = max;
-    int result = -1;
-    while (min != max)
+    int mid;
+    while (min <= max)
     {
+        mid = (int)(max - min) / 2 + min;
         if (value < leaves->leaves[mid].key)
         {
-            mid = (int)(min + mid) / 2;
+            max = mid - 1;
         }
         else if (value > leaves->leaves[mid].key)
         {
-            mid = (int)(max + mid) / 2;
-            if (mid > max)
-            {
-                break;
-            }
+            min = mid + 1;
         }
         else
         {
-            result = mid;
-            break;
+            return mid;
         }
     }
-    return result;
+    return -1;
 }
 
 void B_plus_tree_select(Buffer *buf, int *R_result, int *S_result)
 {
     valueNode *blk = NULL; /* A pointer to a block */
     int *int_blk = NULL;
+    int length;
     freeBlockInBuffer((unsigned char *)R_result, buf);
     freeBlockInBuffer((unsigned char *)S_result, buf);
     createTree(R_root, buf);
     int value_node = commandSearch(RA_VALUE);
     writeAll();
-    /* Read the block from the hard disk */
-    if ((blk = (valueNode *)readBlockFromDisk(value_node, buf)) == NULL)
+    if (value_node != -1)
     {
-        perror("Reading Block Failed!\n");
-        return;
-    };
-
-    int length = blk->size;
-    printf("R result:\n");
-    printf("A\tB\n");
-    for (int i = 0; i < length; i++)
-    {
-        if ((int_blk = (int *)readBlockFromDisk(blk->values[i], buf)) == NULL)
+        /* Read the block from the hard disk */
+        if ((blk = (valueNode *)readBlockFromDisk(value_node, buf)) == NULL)
         {
             perror("Reading Block Failed!\n");
             return;
-        }
-        for (int j = 0; j < 7; j++)
+        };
+
+        length = blk->size;
+        printf("R result:\n");
+        printf("A\tB\n");
+        for (int i = 0; i < length; i++)
         {
-            if (*(int_blk + 2 * j) == RA_VALUE)
+            if ((int_blk = (int *)readBlockFromDisk(blk->values[i], buf)) == NULL)
             {
-                printf("%d\t", *(int_blk + 2 * j));
-                printf("%d\n", *(int_blk + 2 * j + 1));
+                perror("Reading Block Failed!\n");
+                return;
             }
+            for (int j = 0; j < 7; j++)
+            {
+                if (*(int_blk + 2 * j) == RA_VALUE)
+                {
+                    printf("%d\t", *(int_blk + 2 * j));
+                    printf("%d\n", *(int_blk + 2 * j + 1));
+                }
+            }
+            freeBlockInBuffer((unsigned char *)int_blk, buf);
         }
-        freeBlockInBuffer((unsigned char *)int_blk, buf);
+        freeBlockInBuffer((unsigned char *)blk, buf);
     }
-    freeBlockInBuffer((unsigned char *)blk, buf);
     createTree(S_root, buf);
     writeAll();
     value_node = commandSearch(SC_VALUE);
-    /* Read the block from the hard disk */
-    if ((blk = (valueNode *)readBlockFromDisk(value_node, buf)) == NULL)
+    if (value_node != -1)
     {
-        perror("Reading Block Failed!\n");
-        return;
-    }
-    length = blk->size;
-    printf("\nS result:\n");
-    printf("C\tD\n");
-    for (int i = 0; i < length; i++)
-    {
-        if ((int_blk = (int *)readBlockFromDisk(blk->values[i], buf)) == NULL)
+        /* Read the block from the hard disk */
+        if ((blk = (valueNode *)readBlockFromDisk(value_node, buf)) == NULL)
         {
             perror("Reading Block Failed!\n");
             return;
         }
-        for (int j = 0; j < 7; j++)
+        length = blk->size;
+        printf("\nS result:\n");
+        printf("C\tD\n");
+        for (int i = 0; i < length; i++)
         {
-            if (*(int_blk + 2 * j) == SC_VALUE)
+            if ((int_blk = (int *)readBlockFromDisk(blk->values[i], buf)) == NULL)
             {
-                printf("%d\t", *(int_blk + 2 * j));
-                printf("%d\n", *(int_blk + 2 * j + 1));
+                perror("Reading Block Failed!\n");
+                return;
             }
+            for (int j = 0; j < 7; j++)
+            {
+                if (*(int_blk + 2 * j) == SC_VALUE)
+                {
+                    printf("%d\t", *(int_blk + 2 * j));
+                    printf("%d\n", *(int_blk + 2 * j + 1));
+                }
+            }
+            freeBlockInBuffer((unsigned char *)int_blk, buf);
         }
-        freeBlockInBuffer((unsigned char *)int_blk, buf);
     }
     printf("IO num: %d\n", buf->numIO);
 }

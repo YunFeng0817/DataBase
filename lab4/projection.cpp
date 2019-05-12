@@ -18,9 +18,6 @@ int main()
         return -1;
     }
 
-    valueNode *blk = NULL; /* A pointer to a block */
-    int *int_blk = NULL;
-    int length;
     createTree(R_root, &buf);
     leaf_list *leaves;
     leaves = commandGetResult();
