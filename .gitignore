@@ -7,5 +7,5 @@
 **/*.project
 **/.classpath
 **/.project
-**/*.blk
+lab4/data
 **/*.out
