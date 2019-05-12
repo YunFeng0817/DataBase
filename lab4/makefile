@@ -1,3 +1,4 @@
+projection = projection.cpp
 CreateIndex = create_index.cpp
 BPlusTree = BplusTree.cpp
 select = select.cpp
@@ -6,6 +7,12 @@ print = print.cpp
 library = extmem.cpp
 target_file = "database.out"
 database_file = *.blk
+
+projection: clean
+	@g++ -g $(library) $(BPlusTree) $(projection) -o $(target_file);
+	@echo "Compile finished!"
+	@./$(target_file)
+	@echo "\nprojection from database successfully!\n"
 
 index: clean
 	-@rm ./data/*.blk
