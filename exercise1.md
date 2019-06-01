@@ -31,8 +31,8 @@ B. $\delta _{i\theta j}$(R x S)
 C. $\delta _{i\theta (r+j)}$(R $\Join$ S)
 
 D. $\delta _{i\theta j}$(R $\Join$ S)
-B
-根据$\theta$连接的定义，应该选择B,即R与R的笛卡尔乘积中满足$i\theta j$表达式的集合
+选A
+在R与S做笛卡尔乘积之后,总共有r+s个属性,S的第j个属性变成了笛卡尔乘积结果的第r+j个属性,故选A,B是陷阱
 二、有如下四个关系
 厂商 S(SNO,SNAME,STATUS,CITY)
 产品 P(PNO,PNAME,WEIGHT,COLOR)
@@ -44,17 +44,17 @@ B
 供货表 SPJ 由供货厂商号(SNO)、产品号(PNO)、工程号(JNO)、供货数量(QTY)组成。
 用关系代数写出下述操作.
 1. 给出由 LODON(伦敦)的厂商供给 LODON 的工程的产品号。
-   $$\Pi_{PNO}(\sigma_{CITY="LODON"}(S)\Join SPJ\Join\sigma_{CITY="LODON"}(J))$$
+   $$\Pi_{PNO}(\sigma_{CITY="LODON"}(S\Join SPJ\Join J))$$
 2. 给出满足如下条件的所有产品号:提供该零件的厂商和使用该零件的工程在同一城市。
    $$\Pi_{PNO}(S\Join J\Join SPJ)$$
 3. 给出由 S1(厂家号)提供产品的工程名。
-   $$\Pi_{JNO}(\sigma_{SNO=S1}(SPJ))$$
+   $$\Pi_{JNAME}(\sigma_{SNO="S1"}(SPJ)\Join J)$$
 4. 给出使用了由供应红色产品的厂商供应的产品的工程名.
-   $$\Pi_{JNO}(\Pi_{SNO}(sigma_{COLOR=RED}(P)\Join SPJ)\Join SPJ)$$
+   $$\Pi_{JNAME}(\Pi_{SNO}(\sigma_{COLOR="RED"}(P)\Join SPJ)\Join SPJ \Join J)$$
 5. 求使用了全部零件的工程名。
-   $$\Pi_{PNO,JNO}(SPJ)\div\Pi_{PNO}(P)$$
+   $$\Pi_{JNAME}((\Pi_{PNO,JNO}(SPJ)\div\Pi_{PNO}(P))\Join J)$$
 6. 同时供应 P1 和 P2(产品号)两种产品的厂家名。
-   $$(\Pi_{SNAME}(\sigma_{PNAME="P1"}(SPJ)))\cap(\Pi_{SNAME}(\sigma_{PNAME="P2"}(SPJ)))$$
+   $$(\Pi_{SNAME}(\sigma_{PNO="P1"}(SPJ)))\cap(\Pi_{SNAME}(\sigma_{PNO="P2"}(SPJ)))$$
 7. 求与 “TV”(产品名)颜色相同的那些产品的产品名。
    $$\Pi_{PNAME}(\Pi_{COLOR}(\sigma_{PNAME="TV"}(P))\Join P)$$
 
@@ -72,12 +72,12 @@ $$\{t|\in R \wedge t\notin S\}$$
 (6)$\pi_{A,B}(R)\Join\pi_{B,C}(S)$
 $$\{t|\exists u\in R(u[A]=t[A]\wedge u[B]=t[B])\wedge \exists v\in S(v[B]=t[B]\wedge v[C]=t[C])\}$$
 (7)$R\div\pi_C(S)$
-先定义：$$T=\{t|\exists u\in S(u[C]=t[C])\}$$
-$R\div\pi_C(S)$=
-$$\{t|\exists u\in R(u[A]=t[A]\wedge u[B]=t[B])\wedge\forall v\in T(tv\in R)\}$$
+
+$$\{t|\forall s\in S(\exist r \in R \wedge r[A]=t[A]\wedge r[B]=t[B]\wedge r[C]=s[C]) \}$$
 四、谈一谈关系代数、元组演算和域演算的联系和区别。
 联系：
 通过关系代数，元组演算和域演算都可以准确的通过形式化的方式描述某种特定的查询，它们是相互等价的，即某种查询都可以通过三种方式来表达，得到的结果是相同的。
 区别：
 关系代数表达式提供了产生查询结果的过程序列小，注重描述查询过程方法，而元组演算和域演算只描述所需的信息，不给出获取该信息的具体过程，注重表达结果的特征。
 而元组演算与域演算的区别在于元组演算的描述单位是元组，而域演算的描述单位是域变量，即属性名。
+关系代数表达式是安全的,元组演算与域演算是不安全的

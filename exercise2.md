@@ -209,7 +209,7 @@ SELECT DISTINCT class,min(launched)
 FROM Ships
 Group by class;
 ```
-(7) * 列出至少有 3 艘舰船的类型中,该类型名和被击沉的舰船数目。
+(7) 列出至少有 3 艘舰船的类型中,该类型名和被击沉的舰船数目。
 ```sql
 SELECT class,SUM(CASE WHEN result='sunk' THEN 1 ELSE 0 END)
 FROM Ships,Outcomes
